@@ -22,7 +22,7 @@
 
             var link = $('<a></a>').attr('href', "http://maps.google.com/maps?q="+data["latitude"]+","+data["longitude"]+"&hl=fr");
             var map = $('<img></img>').attr('src', "http://maps.googleapis.com/maps/api/staticmap?center="+data["latitude"]+","+data["longitude"]
-                                               + "&zoom=14&size=512x310&maptype=roadmap&markers=color:blue%7Clabel:G%7C"+data["latitude"]+","+data["longitude"]
+                                               + "&zoom=14&size=" + ($("#gare").width() - 45) + "x310&maptype=roadmap&markers=color:blue%7Clabel:G%7C"+data["latitude"]+","+data["longitude"]
                                                + "&sensor=false").appendTo(link);
             positionDiv.append("Gare de " + data["nom"] + " (" + data["ville"] + ", " + data["departement"] + ")").append($("<p></p>").append(link));
 

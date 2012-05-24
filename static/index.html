@@ -66,6 +66,12 @@
         var lineId = urlObj.hash.replace(/.*id=/, "");
 
         var main = $('#ligne');
+        if (main.attr("ligneId") == lineId) {
+            // Do the page change
+            $.mobile.changePage( main, options );
+            return;
+        }
+
         var header = main.children( ":jqmData(role=header)" );
         var content = main.children( ":jqmData(role=content)" );
 
@@ -95,6 +101,7 @@
                 a.append(gare["nom"]);
                 li.appendTo(ul);
             });
+            main.attr("ligneId", lineId);
             main.page();
             content.find( ":jqmData(role=listview)" ).listview();
 
@@ -113,6 +120,11 @@
     function displayLines(urlObj, options) {
         var main = $("#main");
         var content = main.children( ":jqmData(role=content)" );
+        if (content.html() != "") {
+            // Do the page change
+            $.mobile.changePage( main, options );
+            return;
+        }
 
         $.getJSON('http://sterops.pythonanywhere.com/json/GetLignes/', function(data) {
             content.html('');

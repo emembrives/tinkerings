@@ -10,4 +10,5 @@ urlpatterns = patterns('',
     (r'^GetGaresParVille/(\d+)/$', views.get_gares_par_ville),
     (r'^GetGare/(\d+)/$', views.get_gare),
     (r'^LoadData/', data_loading.load_data),
+    (r'^LoadAscenseur/', data_loading.load_ascenseur),
 )

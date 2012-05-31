@@ -65,7 +65,7 @@ def get_or_create_gare(wiki_url, nom):
         return gare, True
 
 def parseDate(date_str):
-    return datetime.strptime(date_str, "%Y-%m-%d")
+    return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
 def get_gare_by_name(gare_nom):
     gare_liste = Gare.objects.filter(gare_infomobi__nom_normalise__iexact=gare_nom).distinct()
@@ -96,21 +96,26 @@ def get_or_create_ascenseur(code, nom_gare):
         ascenseur = Ascenseur(code=code, gare=gare_obj)
         return ascenseur
 
+@require_POST
 def load_ascenseur(request):
     json_data = request.POST["json"]
-    code = request.POST["code"]
-    gare = request.POST["gare"]
-    situation = request.POST["situation"]
-    direction = request.POST["direction"]
-    status = request.POST["status"]
-    last_update = request.POST["date"]
-    ascenseur = get_or_create_ascenseur(code, gare)
-    ascenseur.situation = situation
-    ascenseur.direction = direction
-    ascenseur.status = status
-    ascenseur.mise_a_jour = parseDate(last_update)
-    ascenseur.save()
-    return HttpResponse("OK")
+    ascenseur_dict = json.loads(json_data)
+    code = ascenseur_dict["code"]
+    gare = ascenseur_dict["gare"]
+    situation = ascenseur_dict["situation"]
+    direction = ascenseur_dict["direction"]
+    status = ascenseur_dict["status"]
+    last_update = ascenseur_dict["date"]
+    try:
+        ascenseur = get_or_create_ascenseur(code, gare)
+        ascenseur.situation = situation
+        ascenseur.direction = direction
+        ascenseur.status = status
+        ascenseur.mise_a_jour = parseDate(last_update)
+        ascenseur.save()
+        return HttpResponse("OK")
+    except KeyError:
+        return HttpResponse("Ascenseur " + code + " pour la gare de " + gare + " non charge.")
 
 @require_POST
 def load_data(request):

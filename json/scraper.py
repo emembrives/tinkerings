@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import urllib2
+import urllib2, urllib
 from BeautifulSoup import BeautifulSoup
 from datetime import date, timedelta
 import itertools
@@ -91,7 +91,7 @@ class Scraper(object):
         gj = self.scrape_one_page(station, requested_date)
         for elevator in gj.get_elevators():
           data = elevator.dict_data()
-          data["date"] = requested_date
+          data["date"] = requested_date.strftime("%Y-%m-%d")
           yield data
       except urllib2.HTTPError:
         pass
@@ -129,3 +129,17 @@ class Scraper(object):
     page_date = date(int(year), int(month), int(day))
     if (page_date != requested_date):
       raise Scraper.ElevatorStateUnknown()
+
+if __name__ == "__main__":
+    import json
+    s=Scraper(533, date.today(), date.today())
+    for ascenseur in s.scrape_one_day(date.today()):
+        try:
+            output = urllib2.urlopen("http://sterops.pythonanywhere.com/json/LoadAscenseur/", urllib.urlencode({"json": json.dumps(ascenseur)}))
+
+        except urllib2.URLError, e:
+            print e.code
+            print e.read()
+            raise e
+
+

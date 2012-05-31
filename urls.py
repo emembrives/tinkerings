@@ -14,6 +14,7 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
+    (r'^$', 'django.views.generic.simple.direct_to_template', {'template': '/home/sterops/infomobile/static/index.html'}),
 )
 
 # Uncomment these two lines to enable your static files on PythonAnywhere

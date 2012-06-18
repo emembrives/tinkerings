@@ -5,6 +5,7 @@
 	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
 	<script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 	<script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+    <script src="/static/jquery.cookie.js"></script>
     <script type="text/javascript">
     function displayStation(urlObj, options) {
         var stationId = urlObj.hash.replace(/.*id=/, "");
@@ -39,8 +40,14 @@
             ascenseursUl = $('<ul>').appendTo(ascenseursDiv).attr("data-role", "listview").attr("data-inset", "false").attr("data-filter", "false");
             $.each(data["ascenseurs"], function(index, ascenseur) {
                 var li = $("<li></li>");
-                li.append('<h3 style="white-space: normal">' + ascenseur["situation"] + "</h3><p>" + ascenseur["direction"] + ' - Situation en date du ' + ascenseur["maj"] + '</p><p class="ui-li-aside">' + ascenseur["status"]+'</p>');
-                if (ascenseur["status"] != "Disponible") {
+                li.append('<h3 style="white-space: normal">' + ascenseur["situation"] + "</h3>");
+
+                if (ascenseur["code"] != "rampe") {
+                    li.append("<p>" + ascenseur["direction"] + ' - Situation en date du <strong>' + ascenseur["maj"] + '</strong></p><p class="ui-li-aside">' + ascenseur["status"]+'</p>');
+                } else {
+                    li.append("<p>" + ascenseur["direction"] + "</p>");
+                }
+                if (ascenseur["status"] != "Disponible" && ascenseur["code"] != "rampe") {
                     li.attr("data-icon", "alert");
                     li.attr("data-theme", "e");
                 }
@@ -79,15 +86,36 @@
 
         $.getJSON('http://sterops.pythonanywhere.com/json/GetGaresParLigne/' + lineId + '/', function(data) {
             content.html('');
-            var ul = $('<ul>').appendTo(content).attr("data-role", "listview").attr("data-inset", "true").attr("data-filter", "true");
 
             var reseau = data["reseau"];
             var ligne = data["ligne"];
 
             header.find( "h1" ).html(reseau + " " + ligne);
 
-            var gares = data["gares"];
-            $.each(gares, function(index, gare) {
+            var today = new Date();
+            if (today.getFullYear() != data["maj"][0] || today.getMonth() + 1 != data["maj"][1] || today.getDate() != data["maj"][2] || true) {
+                var butterBar = $('<div>').attr("class", "ui-body ui-body-e").html("Dernière mise à jour le " + data["maj"][2] + "/" + data["maj"][1] + "/" + data["maj"][0]).appendTo(content).css("margin", "0px 0px 25px 0px");
+            }
+
+            var ul = $('<ul>').appendTo(content).attr("data-role", "listview").attr("data-inset", "true").attr("data-filter", "true");
+
+            $('<li></li>').attr("data-role", "list-divider").html("Avec dysfonctionnement(s)").appendTo(ul);
+            $.each(data["gares_pb"], function(index, gare) {
+                var li = $("<li></li>");
+                var a = $("<a></a>").appendTo(li);
+                a.id = gare["id"];
+                a.attr("href", "#gare?id=" + gare["id"]);
+                if (gare["status"]) {
+                    //li.addClass("gareOK");
+                } else {
+                    li.attr("data-icon", "alert");
+                    li.attr("data-theme", "e");
+                }
+                a.append(gare["nom"]);
+                li.appendTo(ul);
+            });
+            $('<li></li>').attr("data-role", "list-divider").html("En fonctionnement").appendTo(ul);
+            $.each(data["gares_ok"], function(index, gare) {
                 var li = $("<li></li>");
                 var a = $("<a></a>").appendTo(li);
                 a.id = gare["id"];
@@ -128,7 +156,7 @@
 
         $.getJSON('http://sterops.pythonanywhere.com/json/GetLignes/', function(data) {
             content.html('');
-            var ul = $('<ul>').appendTo(content).attr("data-role", "listview").attr("data-inset", "true").attr("data-filter", "true");
+            var ul = $('<ul>').appendTo(content).attr("data-role", "listview").attr("data-inset", "true").attr("data-filter", "false");
 
             $.each(data, function(index, ligne) {
                 var li = $("<li></li>");
@@ -163,6 +191,7 @@ $(document).bind( "pagebeforechange", function( e, data ) {
 		// want to handle URLs that request the data for a specific
 		// category.
 		var u = $.mobile.path.parseUrl( data.toPage );
+        _gaq.push(['_trackPageview', data.toPage]);
 		if ( u.hash.indexOf("#ligne") == 0 ) {
 			// Display one train line
             displayStationsByLine( u, data.options );
@@ -186,18 +215,34 @@ $(document).bind( "pagebeforechange", function( e, data ) {
 
 /*$(document).bind('pageinit', function(e, data) {
 	var u = $.mobile.path.parseUrl( data.toPage );
-    displayLines(u, data.options);
-
-    // Make sure to tell changePage() we've handled this call so it doesn't
-	// have to do anything.
-	e.preventDefault();
+    if ($.cookie('already_there') != null) {
+        $.cookie('already_there', 'yes', { expires: 60, path: '/' });
+        displayLines();
+        return;
+    }
+    $.cookie('already_there', 'yes', { expires: 60, path: '/' });
+    if (u.hash == "") {
+        $.mobile.changePage( $('#help'), data.options );
+        // Make sure to tell changePage() we've handled this call so it doesn't
+        // have to do anything.
+	    e.preventDefault();
+    }
 });*/
 
-$(document).ready(function() { displayLines(); });
+$(document).ready(function() {
+    if ($.cookie('already_there') != null || window.location.hash) {
+        displayLines();
+    } else {
+        $.mobile.changePage( $('#help'), {} );
+        // Make sure to tell changePage() we've handled this call so it doesn't
+        // have to do anything.
+        // e.preventDefault();
+    }
+    $.cookie('already_there', 'yes', { expires: 60, path: '/' });
+    });
 
     </script>
     <script type="text/javascript">
-
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-31909461-1']);
   _gaq.push(['_trackPageview']);
@@ -212,22 +257,26 @@ $(document).ready(function() { displayLines(); });
     </head>
     <body>
     <div id="main" data-role="page">
-        <div data-role="header"><h1>Lignes</h1></div>
-        <div data-role="content"></div>
-        <div data-role="footer"><h4><a href="#popup" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4></div>
-    </div>
-    <div id="ligne" data-role="page">
-        <div data-role="header"><h1></h1>
-            <a href="/static/index.html" data-icon="home" data-iconpos="notext">Accueil</a>
+        <div data-role="header" data-position="fixed"><h1 style="white-space: normal">&lt;NOM-DU-SITE&gt;: Lignes</h1>
+            <a href="#help" data-rel="dialog" data-transition="pop" data-icon="info" data-iconpos="notext" class="ui-btn-right">À propos</a>
         </div>
         <div data-role="content"></div>
-        <div data-role="footer">
-        	<h4><a href="#popup" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
+        <div data-role="footer" data-position="fixed"><h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4></div>
+    </div>
+    <div id="ligne" data-role="page">
+        <div data-role="header" data-position="fixed"><h1></h1>
+            <a href="/" data-icon="home" data-iconpos="notext">Accueil</a>
+            <a href="#help" data-rel="dialog" data-transition="pop" data-icon="info" data-iconpos="notext">À propos</a>
+        </div>
+        <div data-role="content"></div>
+        <div data-role="footer" data-position="fixed">
+        	<h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
 	    </div>
     </div>
     <div id="gare" data-role="page" data-add-back-btn="true">
-        <div data-role="header"><h1></h1>
-            <a href="/static/index.html" data-icon="home" data-iconpos="notext">Accueil</a>
+        <div data-role="header" data-position="fixed"><h1></h1>
+            <a href="/" data-icon="home" data-iconpos="notext">Accueil</a>
+            <a href="#help" data-rel="dialog" data-transition="pop" data-icon="info" data-iconpos="notext">À propos</a>
         </div>
         <div data-role="content">
             <div data-role="collapsible-set" data-theme="" data-content-theme="">
@@ -245,19 +294,32 @@ $(document).ready(function() { displayLines(); });
                 </div>
             </div>
         </div>
-        <div data-role="footer">
-    		<h4><a href="#popup" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
+        <div data-role="footer" data-position="fixed">
+    		<h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
 	    </div>
     </div>
-    <div data-role="page" id="popup">
-        <div data-role="header" data-theme="e"><h1>À Propos</h1></div>
+    <div data-role="page" id="help">
+        <div data-role="header" data-theme="e"><h1 style="white-space: normal">Bienvenue sur &lt;NOM-DU-SITE&gt;</h1></div>
 	    <div data-role="content" data-theme="d">
-		    <h2>Info-mobile</h2>
-    		<p>Info-mobile&nbsp;: l'information (presque) temps-réel sur l'accessibilité du réseau ferré d'Ile-de-France.</p>
+		    <h2>&lt;NOM-DU-SITE&gt;</h2>
+    		<p>&lt;NOM-DU-SITE&gt;: l'information (presque) temps-réel sur l'accessibilité du réseau ferré d'Ile-de-France.</p>
+            <h3>Comment utiliser ce site ?</h3>
+            <p>
+            Les gares sont classées par ligne. Sélectionnez une ligne pour afficher toutes les gares accessibles. Les gares
+            disposant d'ascenseurs hors-services sont signalées.</p>
+            <p>Il est également possible d'afficher des information détaillées
+            sur la gare : le détail de ses ascenseurs, sa situation géographique, ainsi que les lignes disponibles.
+            </p>
+            <a href="/" data-role="button">C'est parti !</a>
+        </div>
+    </div>
+    <div data-role="page" id="apropos">
+        <div data-role="header" data-theme="e"><h1 style="white-space: normal">À propos de &lt;NOM-DU-SITE&gt;</h1></div>
+        <div data-role="content" data-theme="d">
+            <h3>À propos</h3>
             <p>Ce site est donné à titre indicatif uniquement. Il est possible que les informations qu'il contient soient incomplètes, inexactes ou en retard par rapport à la situation réelle.
             N'hésitez pas à me contacter si vous repérez de tels problèmes afin que je puisse y remédier.</p>
             <p>Le contenu de ce site est généré de manière automatique à partir de multiples sources publiques sur le réseau RATP et SNCF d'Ile-de-France, son accessibilité et l'état des équipements en gare.</p>
-            <p>2012 - Etienne Membrives - Tous droits réservés</p>
     	</div>
     </div>
     </body>

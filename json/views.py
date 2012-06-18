@@ -1,5 +1,6 @@
 # Create your views here.
 import json
+from datetime import date
 
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
@@ -51,24 +52,44 @@ def get_lignes(request):
 
 def get_gares_par_ligne(request, ligne):
     gares = Gare.objects.filter(ligne__pk=ligne).order_by("nom")
-    gares_liste = map(dictify_gare_simple, gares)
     ligne_obj = Ligne.objects.get(pk=ligne)
+
+    ascenseurs = Ascenseur.objects.filter(gare__ligne__pk=ligne)
+    maj = date(1970, 1, 1)
+    for ascenseur in ascenseurs:
+        if ascenseur.mise_a_jour > maj:
+            maj = ascenseur.mise_a_jour
+
+    gares_liste = map(dictify_gare_simple, gares)
+    gares_ok = filter(lambda g: g["status"], gares_liste)
+    gares_pb = filter(lambda g: not g["status"], gares_liste)
 
     return HttpResponse(json.dumps({'reseau': ligne_obj.reseau,
                                     'ligne': ligne_obj.ligne,
-                                    'gares': gares_liste}))
+                                    'gares': gares_liste,
+                                    'gares_ok': gares_ok,
+                                    'gares_pb': gares_pb,
+                                    'maj': (maj.year, maj.month, maj.day)}))
 
 def dictify_gare_detail(gare):
     json_data = dictify_gare_simple(gare)
     json_data['wikipedia'] = map(lambda w: w.url, gare.articles_wikipedia.all())
     json_data['ascenseurs'] = []
-    for ascenseur in gare.ascenseurs.all():
+    ascenseurs = gare.ascenseurs.all()
+    for ascenseur in ascenseurs:
         ascenseur_json = {'code': ascenseur.code,
                           'situation': ascenseur.situation,
                           'direction': ascenseur.direction,
                           'status': ascenseur.status,
                           'maj': ascenseur.mise_a_jour.strftime("%Y-%m-%d")}
         json_data['ascenseurs'].append(ascenseur_json)
+    if len(ascenseurs) == 0:
+        ascenseur_json = {'code': 'rampe',
+                          'situation': "Rampes",
+                          'direction': "L'acc&egrave;s &agrave; cette gare ne necessite pas d'ascenseur",
+                          }
+        json_data['ascenseurs'].append(ascenseur_json)
+
     ville = gare.ville
     json_data['ville'] = ville.nom
     json_data['departement'] = ville.departement

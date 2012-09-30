@@ -33,6 +33,7 @@ def dictify_gare_simple(gare):
     json_data['arrets'] = []
     for ligne in lignes:
         json_data['arrets'].append({'reseau': ligne.reseau, 'ligne': ligne.ligne, 'id': ligne.id})
+    json_data['infomobi'] = filter(lambda x: x!=None, map(lambda w: w.code, gare.gare_infomobi.all()))
     json_data["status"] = True
     if bool(gare.ascenseurs.exclude(status__iexact="Disponible")):
         json_data["status"] = False
@@ -49,6 +50,14 @@ def get_lignes(request):
     to_dict = lambda l: {'reseau': l.reseau, 'ligne': l.ligne, 'id': l.pk}
     lignes = map(to_dict, Ligne.objects.all().order_by("reseau", "ligne"))
     return HttpResponse(json.dumps(lignes))
+
+def get_gares(request):
+    # Return all known lines
+    to_dict = lambda l: {'reseau': l.reseau, 'ligne': l.ligne, 'id': l.pk}
+    lignes = map(to_dict, Ligne.objects.all().order_by("reseau", "ligne"))
+    # Retourn all known stations
+    gares = map(dictify_gare_simple, Gare.objects.all())
+    return HttpResponse(json.dumps({"lines": lignes, "stations": gares}))
 
 def get_gares_par_ligne(request, ligne):
     gares = Gare.objects.filter(ligne__pk=ligne).order_by("nom")

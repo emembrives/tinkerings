@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from models import *
-from data_loading import get_or_create_ascenseur
+from data_loading import get_or_create_ascenseur,normalise
 
 def add_accessible_line(csv_file):
     ligne_objects = {"A": Ligne(reseau="RER", ligne="A"),
@@ -54,3 +54,25 @@ def load_ascenseur_manuel(ascenseur_data):
         ascenseur.save()
     except KeyError:
         print "Ascenseur " + code + " pour la gare de " + nom_gare + " non charge."
+
+def update_station(name, code):
+    if (GareInfomobi.objects.filter(code=code)):
+        return
+    gares = GareInfomobi.objects.filter(nom__icontains=name,code__isnull=True)
+    if (len(gares) == 1):
+        gare = gares[0]
+        gare.code = code
+        gare.save()
+        return
+    elif (len(gares) > 1):
+        print name, code, str(map(lambda x:x.nom, gares))
+    gares = GareInfomobi.objects.filter(nom_normalise__icontains=normalise(name), code__isnull=True)
+    if (len(gares) == 1):
+        gare = gares[0]
+        gare.code = code
+        gare.save()
+        return
+    elif (len(gares) > 1):
+        print name, code, str(map(lambda x:x.nom, gares))
+        return
+    print name, code

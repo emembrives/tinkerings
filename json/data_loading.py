@@ -78,7 +78,7 @@ def get_gare_by_name(gare_nom):
     if len(gare_liste) == 1:
         return gare_liste[0]
     elif len(gare_liste) > 1:
-        raise KeyEError("Plusieurs gares au nom de " + reduced_name)
+        raise KeyError("Plusieurs gares au nom de " + reduced_name)
     gare_liste = Gare.objects.filter(gare_infomobi__nom_normalise__icontains=reduced_name).distinct()
     if len(gare_liste) == 1:
         return gare_liste[0]
@@ -87,13 +87,25 @@ def get_gare_by_name(gare_nom):
     else:
         raise KeyError("Gare non trouvee pour " + gare_nom + " | " + reduced_name)
 
-def get_or_create_ascenseur(code, nom_gare):
+def get_or_create_ascenseur(code, nom_gare, code_gare):
+    if (not GareInfomobi.objects.filter(code=code_gare).exists()):
+        try:
+            gare_obj = get_gare_by_name(nom_gare)
+            gare_infomobi = gare_obj.gare_infomobi.filter(code__isnull=True)[0]
+            gare_infomobi.code = code_gare
+            gare_infomobi.save()
+        except KeyError:
+            print str(nom_gare), str(code_gare)
+        except IndexError:
+            print str(code_gare)
     try:
         ascenseur = Ascenseur.objects.get(code=code)
         return ascenseur
     except Ascenseur.DoesNotExist:
         gare_obj = get_gare_by_name(nom_gare)
         ascenseur = Ascenseur(code=code, gare=gare_obj)
+        ascenseur.save()
+        gare_obj.save()
         return ascenseur
 
 @require_POST
@@ -102,12 +114,13 @@ def load_ascenseur(request):
     ascenseur_dict = json.loads(json_data)
     code = ascenseur_dict["code"]
     gare = ascenseur_dict["gare"]
+    code_gare = ascenseur_dict["code_gare"]
     situation = ascenseur_dict["situation"]
     direction = ascenseur_dict["direction"]
     status = ascenseur_dict["status"]
     last_update = ascenseur_dict["date"]
     try:
-        ascenseur = get_or_create_ascenseur(code, gare)
+        ascenseur = get_or_create_ascenseur(code, gare, code_gare)
         ascenseur.situation = situation
         ascenseur.direction = direction
         ascenseur.status = status

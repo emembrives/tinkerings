@@ -1,0 +1,132 @@
+package main
+
+import (
+	"fmt"
+	"infomobi/client"
+	"infomobi/storage"
+	"labix.org/v2/mgo"
+	"labix.org/v2/mgo/bson"
+)
+
+const mapStationsToLines string = `function() {
+    var lines = this.lines;
+    delete this["lines"];
+    delete this["_id"];
+    this["status"] = true;
+    this["update"] = null;
+    
+    for (var i = 0; i < this.elevators.length; i++) {
+        var elevator = this.elevators[i];
+        var status = elevator.status;
+        if (this["update"] != null && status.lastupdate > this["update"]) {
+            this["update"] = status.lastupdate;
+        } else {
+            this["update"] = status.lastupdate;
+        }
+        if (status.state == "Disponible") {
+            continue;
+        } else {
+            this["status"] = false;
+            break;
+        }
+    }
+    delete this["elevators"];
+
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        delete line["_id"];
+        line.update = this.update;
+        line.goodStations = [];
+        line.badStations = [];
+        if (this.status) {
+            line.goodStations = [this];
+        } else {
+            line.badStations = [this];
+        }
+        emit(line.id, line);
+    }
+}`
+
+const reduceLines string = `function(keySKU, lines) {
+    var line = lines[0];
+    for (var idx = 1; idx < lines.length; idx++) {
+        if (lines[idx].badStations.length > 0) {
+            line.badStations.push(lines[idx].badStations[0]);
+            if (line.update < lines[idx].badStations[0].update) {
+                line.update = lines[idx].badStations[0].update;
+            }
+        }
+        if (lines[idx].goodStations.length > 0) {
+            line.goodStations.push(lines[idx].goodStations[0]);
+            if (line.update < lines[idx].goodStations[0].update) {
+                line.update = lines[idx].goodStations[0].update;
+            }
+        }
+    }
+    var sortFunc = function(a, b) {
+        if (a.displayname < b.displayname) {
+            return -1;
+        } else if (a.displayname == b.displayname) {
+            return 0;
+        } else {
+            return 1;
+        }};
+    line.badStations.sort(sortFunc);
+    line.goodStations.sort(sortFunc);
+    return line;
+}`
+
+func main() {
+	session, err := mgo.Dial("localhost")
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	// Optional. Switch the session to a monotonic behavior
+	session.SetMode(mgo.Monotonic, true)
+
+	c := session.DB("dispotrains").C("stations")
+	lines, err := client.GetAllLines()
+	fmt.Println("All lines retrieved")
+	if err != nil {
+		panic(err)
+	}
+	var stations map[string]*storage.Station = make(map[string]*storage.Station)
+	for _, line := range lines {
+		for _, station := range line.GetStations() {
+			if _, ok := stations[station.Name]; ok == true {
+				for _, sLine := range station.Lines {
+					stations[station.Name].AttachLine(sLine)
+				}
+			} else {
+				stations[station.Name] = station
+			}
+		}
+	}
+	c.RemoveAll(bson.M{})
+	for _, station := range stations {
+		err = c.Insert(&station)
+		if err != nil {
+			panic(err)
+		}
+	}
+	job := &mgo.MapReduce{Map: mapStationsToLines, Reduce: reduceLines, Out: bson.M{"replace": "lines"}}
+	_, err = c.Find(nil).MapReduce(job, nil)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
+/*
+		for _, station := range line.GetStations() {
+			if !station.HasElevators {
+				continue
+			}
+			for _, elevator := range station.GetElevators() {
+				status := elevator.GetLastStatus()
+			}
+		}
+	}
+}*/

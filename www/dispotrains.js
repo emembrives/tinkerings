@@ -1,48 +1,46 @@
+function getDateDisplay(dateObj) {
+    var date = new Date(dateObj);
+    return date.toLocaleString();
+}
+
     function displayStation(urlObj, options) {
         var stationId = urlObj.hash.replace(/.*id=/, "");
-        var main = $('#gare');
+        var main = $('#station');
         var header = main.children( ":jqmData(role=header)" );
         var content = main.children( ":jqmData(role=content)" );
         $.mobile.showPageLoadingMsg();
 
-        $.getJSON('http://sterops.pythonanywhere.com/json/GetGare/' + stationId + '/', function(data) {
-            header.find( "h1" ).html(data.nom);
+        $.getJSON('/app/GetStation/' + stationId + '/', function(data) {
+            header.find( "h1" ).html(data.displayname);
 
-            var positionDiv = main.find('#position').find(".data").html(''),
-                lignesDiv = main.find('#lignes').find(".data").html(''),
-                ascenseursDiv = main.find('#ascenseurs').find(".data").html('');
+            var linesDiv = main.find('#lines').find(".data").html(''),
+                elevatorsDiv = main.find('#elevators').find(".data").html('');
 
-            var link = $('<a></a>').attr('href', "http://maps.google.com/maps?q="+data["latitude"]+","+data["longitude"]+"&hl=fr");
-            var map = $('<img></img>').attr('src', "http://maps.googleapis.com/maps/api/staticmap?center="+data["latitude"]+","+data["longitude"]
-                                               + "&zoom=14&size=" + ($("#gare").width() - 45) + "x310&maptype=roadmap&markers=color:blue%7Clabel:G%7C"+data["latitude"]+","+data["longitude"]
-                                               + "&sensor=false").appendTo(link);
-            positionDiv.append("Gare de " + data["nom"] + " (" + data["ville"] + ", " + data["departement"] + ")").append($("<p></p>").append(link));
-
-            var lignesUl = $('<ul>').appendTo(lignesDiv).attr("data-role", "listview").attr("data-inset", "false").attr("data-filter", "false");
-            $.each(data["arrets"], function(index, ligne) {
+            var linesUl = $('<ul>').appendTo(linesDiv).attr("data-role", "listview").attr("data-inset", "false").attr("data-filter", "false");
+            $.each(data["lines"], function(index, line) {
                 var li = $("<li></li>");
                 var a = $("<a></a>").appendTo(li);
-                a.id = ligne["id"];
-                a.attr("href", "#ligne?id=" + ligne["id"]);
-                a.append(ligne["reseau"] + " " + ligne["ligne"]);
-                li.appendTo(lignesUl);
+                a.id = line["id"];
+                a.attr("href", "#ligne?id=" + line["id"]);
+                a.append(line["network"] + " " + line["id"]);
+                li.appendTo(linesUl);
             });
 
-            ascenseursUl = $('<ul>').appendTo(ascenseursDiv).attr("data-role", "listview").attr("data-inset", "false").attr("data-filter", "false");
-            $.each(data["ascenseurs"], function(index, ascenseur) {
+            elevatorsUl = $('<ul>').appendTo(elevatorsDiv).attr("data-role", "listview").attr("data-inset", "false").attr("data-filter", "false");
+            $.each(data["elevators"], function(index, elevator) {
                 var li = $("<li></li>");
-                li.append('<h3 style="white-space: normal">' + ascenseur["situation"] + "</h3>");
+                li.append('<h3 style="white-space: normal">' + elevator["situation"] + "</h3>");
 
-                if (ascenseur["code"] != "rampe") {
-                    li.append("<p>" + ascenseur["direction"] + ' - Situation en date du <strong>' + ascenseur["maj"] + '</strong></p><p class="ui-li-aside">' + ascenseur["status"]+'</p>');
+                if (elevator["code"] != "rampe") {
+                    li.append("<p>" + elevator["direction"] + ' - Situation en date du <strong>' + getDateDisplay(elevator.status.lastupdate) + '</strong></p><p class="ui-li-aside">' + elevator.status.state +'</p>');
                 } else {
-                    li.append("<p>" + ascenseur["direction"] + "</p>");
+                    li.append("<p>" + elevator["direction"] + "</p>");
                 }
-                if (ascenseur["status"] != "Disponible" && ascenseur["code"] != "rampe") {
+                if (elevator.status.state != "Disponible" && elevator["code"] != "rampe") {
                     li.attr("data-icon", "alert");
                     li.attr("data-theme", "e");
                 }
-                li.appendTo(ascenseursUl);
+                li.appendTo(elevatorsUl);
             });
 
             main.page();
@@ -63,64 +61,55 @@
     function displayStationsByLine(urlObj, options) {
         var lineId = urlObj.hash.replace(/.*id=/, "");
 
-        var main = $('#ligne');
-        if (main.attr("ligneId") == lineId) {
-            // Do the page change
-            $.mobile.changePage( main, options );
-            return;
-        }
+        var app = $("#app");
+        var main = $('#line');
 
         var header = main.children( ":jqmData(role=header)" );
         var content = main.children( ":jqmData(role=content)" );
 
         $.mobile.showPageLoadingMsg();
 
-        $.getJSON('http://sterops.pythonanywhere.com/json/GetGaresParLigne/' + lineId + '/', function(data) {
+        loadLinesData();
+        var getLines = app.data('getLines');
+        getLines.success(function(lines) {
             content.html('');
 
-            var reseau = data["reseau"];
-            var ligne = data["ligne"];
-
-            header.find( "h1" ).html(reseau + " " + ligne);
-
-            var today = new Date();
-            if (today.getFullYear() != data["maj"][0] || today.getMonth() + 1 != data["maj"][1] || today.getDate() != data["maj"][2]) {
-                var butterBar = $('<div>').attr("class", "ui-body ui-body-e").html("Dernière mise à jour le " + data["maj"][2] + "/" + data["maj"][1] + "/" + data["maj"][0]).appendTo(content).css("margin", "0px 0px 25px 0px");
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].id == lineId) {
+                    var data = lines[i];
+                    break;
+                }
             }
+
+            var network = data["network"];
+
+            header.find( "h1" ).html(network + " " + lineId);
 
             var ul = $('<ul>').appendTo(content).attr("data-role", "listview").attr("data-inset", "true").attr("data-filter", "true");
 
             $('<li></li>').attr("data-role", "list-divider").html("Avec dysfonctionnement(s)").appendTo(ul);
-            $.each(data["gares_pb"], function(index, gare) {
+            $.each(data.badStations, function(index, station) {
                 var li = $("<li></li>");
                 var a = $("<a></a>").appendTo(li);
-                a.id = gare["id"];
-                a.attr("href", "#gare?id=" + gare["id"]);
-                if (gare["status"]) {
-                    //li.addClass("gareOK");
-                } else {
-                    li.attr("data-icon", "alert");
-                    li.attr("data-theme", "e");
-                }
-                a.append(gare["nom"]);
+                a.id = station["name"];
+                a.attr("href", "#station?id=" + station["name"]);
+                li.attr("data-icon", "alert");
+                li.attr("data-theme", "e");
+                a.append(station["displayname"]);
                 li.appendTo(ul);
             });
+
             $('<li></li>').attr("data-role", "list-divider").html("En fonctionnement").appendTo(ul);
-            $.each(data["gares_ok"], function(index, gare) {
+            $.each(data["goodStations"], function(index, station) {
                 var li = $("<li></li>");
                 var a = $("<a></a>").appendTo(li);
-                a.id = gare["id"];
-                a.attr("href", "#gare?id=" + gare["id"]);
-                if (gare["status"]) {
-                    //li.addClass("gareOK");
-                } else {
-                    li.attr("data-icon", "alert");
-                    li.attr("data-theme", "e");
-                }
-                a.append(gare["nom"]);
+                a.id = station["name"];
+                a.attr("href", "#station?id=" + station["name"]);
+                a.append(station["displayname"]);
                 li.appendTo(ul);
             });
-            main.attr("ligneId", lineId);
+            main.data("lineId", lineId);
+            main.data("update", new Date());
             main.page();
             content.find( ":jqmData(role=listview)" ).listview();
 
@@ -136,7 +125,14 @@
         });
     }
 
+    function loadLinesData() {
+        var app = $("#app");
+        var getLines = $.getJSON('/app/GetLines/', function(data) {});
+        app.data('getLines', getLines);
+    }
+
     function displayLines(urlObj, options) {
+        var app = $("#app");
         var main = $("#main");
         var content = main.children( ":jqmData(role=content)" );
         if (content.html() != "") {
@@ -145,7 +141,9 @@
             return;
         }
 
-        $.getJSON('http://sterops.pythonanywhere.com/json/GetLignes/', function(data) {
+        loadLinesData();
+        var getLines = app.data('getLines');
+        getLines.success(function(data) {
             content.html('');
             var ul = $('<ul>').appendTo(content).attr("data-role", "listview").attr("data-inset", "true").attr("data-filter", "false");
 
@@ -153,8 +151,8 @@
                 var li = $("<li></li>");
                 var a = $("<a></a>").appendTo(li);
                 a.id = ligne["id"];
-                a.attr("href", "#ligne?id=" + ligne["id"]);
-                a.append(ligne["reseau"] + ' ' + ligne["ligne"]);
+                a.attr("href", "#line?id=" + ligne["id"]);
+                a.append(ligne["network"] + ' ' + ligne["id"]);
                 li.appendTo(ul);
             });
 
@@ -183,14 +181,14 @@ $(document).bind( "pagebeforechange", function( e, data ) {
 		// category.
 		var u = $.mobile.path.parseUrl( data.toPage );
         _gaq.push(['_trackPageview', data.toPage]);
-		if ( u.hash.indexOf("#ligne") == 0 ) {
+		if ( u.hash.indexOf("#line") == 0 ) {
 			// Display one train line
             displayStationsByLine( u, data.options );
 
 			// Make sure to tell changePage() we've handled this call so it doesn't
 			// have to do anything.
         	e.preventDefault();
-		} else if (u.hash.indexOf("#gare") == 0) {
+		} else if (u.hash.indexOf("#station") == 0) {
             displayStation(u, data.options);
 
             e.preventDefault();
@@ -205,15 +203,7 @@ $(document).bind( "pagebeforechange", function( e, data ) {
 });
 
 $(document).ready(function() {
-    if ($.cookie('already_there') != null || window.location.hash) {
-        displayLines();
-    } else {
-        $.mobile.changePage( $('#help'), {} );
-        // Make sure to tell changePage() we've handled this call so it doesn't
-        // have to do anything.
-        // e.preventDefault();
-    }
-    $.cookie('already_there', 'yes', { expires: 60, path: '/' });
+    displayLines()
     $(document).bind('swiperight', function() {history.back()});
-    });
+});
 

@@ -1,6 +1,6 @@
 function getDateDisplay(dateObj) {
-    var date = new Date(dateObj);
-    return date.toLocaleString();
+     var date = moment(dateObj);
+     return date.format("llll");
 }
 
     function displayStation(urlObj, options) {
@@ -203,7 +203,7 @@ $(document).bind( "pagebeforechange", function( e, data ) {
 });
 
 $(document).ready(function() {
-    displayLines()
-    $(document).bind('swiperight', function() {history.back()});
+    moment.lang('fr');
+    displayLines();
 });
 

@@ -55,10 +55,13 @@ func getStations(line *storage.Line) ([]*storage.Station, error) {
 	if err != nil {
 		return nil, err
 	}
+	var stations []*storage.Station = make([]*storage.Station, 0)
 	var table *html.Node = findNode(bodyParser, "table")
+	if table == nil {
+		return stations, nil
+	}
 	var tbody *html.Node = findNode(table, "tbody")
 	var row *html.Node
-	var stations []*storage.Station = make([]*storage.Station, 0)
 	for row = findNode(tbody, "tr"); row != nil; row = findNext(row) {
 		var col *html.Node = findNode(row, "td")
 		var fullName string = col.FirstChild.Data
@@ -131,8 +134,10 @@ func getElevatorsAndStatus(station *storage.Station) error {
 			direction = col.FirstChild.Data
 		}
 		col = findNext(col)
-		if col.FirstChild != nil {
+		if col.FirstChild != nil && findNode(col, "span") != nil {
 			status = findNode(col, "span").FirstChild.Data
+		} else if col.FirstChild != nil {
+			status = col.FirstChild.Data
 		}
 		var elevator *storage.Elevator = station.NewElevator(code, situation, direction)
 		_, err = elevator.NewStatus(status, date)

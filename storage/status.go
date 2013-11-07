@@ -7,6 +7,5 @@ import (
 type Status struct {
 	State      string
 	LastUpdate time.Time
-	Time       time.Time
 	elevator   *Elevator
 }

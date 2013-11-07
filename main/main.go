@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"infomobi/client"
 	"infomobi/storage"
 	"labix.org/v2/mgo"
@@ -84,11 +83,11 @@ func main() {
 	defer session.Close()
 
 	// Optional. Switch the session to a monotonic behavior
-	session.SetMode(mgo.Monotonic, true)
+	// session.SetMode(mgo.Monotonic, true)
 
 	c := session.DB("dispotrains").C("stations")
 	lines, err := client.GetAllLines()
-	fmt.Println("All lines retrieved")
+
 	if err != nil {
 		panic(err)
 	}
@@ -117,6 +116,17 @@ func main() {
 		panic(err)
 	}
 
+	c = session.DB("dispotrains").C("statuses")
+	for _, station := range stations {
+		for _, elevator := range station.GetElevators() {
+			bsonStatus := bson.M{
+				"state":      elevator.Status.State,
+				"lastupdate": elevator.Status.LastUpdate,
+				"elevator":   elevator.ID,
+			}
+			c.Upsert(bsonStatus, bsonStatus)
+		}
+	}
 }
 
 /*

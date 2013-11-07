@@ -19,7 +19,6 @@ func (elevator *Elevator) GetStation() *Station {
 
 func (elevator *Elevator) NewStatus(description string, date string) (*Status, error) {
 	var status *Status = &Status{State: strings.TrimSpace(description),
-		Time:     time.Now(),
 		elevator: elevator}
 	lastUpdate, err := time.Parse("02/01/2006 15:04", strings.TrimSpace(date))
 	if err != nil {

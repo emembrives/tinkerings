@@ -10,7 +10,7 @@ import (
 )
 
 type UserMessage struct {
-	Vote             int
+	Vote             string
 	ChangedVote      bool
 	RequestReset     bool
 	RequestVoteClose bool
@@ -72,9 +72,11 @@ func (ps *PokerServer) HandleUser(user *User) {
 		message := UserMessage{}
 		err := user.conn.ReadJSON(&message)
 		if err != nil {
+			log.Println("Error: ", err)
 			user.Close()
 			break
 		}
+		log.Println("Receiving:", message)
 		if message.ChangedVote {
 			user.vote = message.Vote
 			user.voted = true
@@ -88,6 +90,7 @@ func (ps *PokerServer) HandleUser(user *User) {
 		}
 	}
 	delete(ps.users, user)
+	log.Println("Disconnecting user")
 }
 
 func (ps *PokerServer) DispatchVoteStatus() {
@@ -105,7 +108,7 @@ func (ps *PokerServer) DispatchVoteStatus() {
 }
 
 func (ps *PokerServer) DispatchVoteResults() {
-	results := make(map[int]int)
+	results := make(map[string]int)
 	number_users := len(ps.users)
 	number_voted := 0
 	for user := range ps.users {
@@ -123,7 +126,6 @@ func (ps *PokerServer) DispatchVoteResults() {
 func (ps *PokerServer) PrepareNewVote() {
 	for user := range ps.users {
 		user.voted = false
-		user.vote = -1
 		user.SendNewVote()
 	}
 }

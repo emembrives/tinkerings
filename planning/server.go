@@ -79,7 +79,7 @@ func (ps *PokerServer) HandleUser(user *User) {
 		log.Println("Receiving:", message)
 		if message.ChangedVote {
 			user.vote = message.Vote
-			user.voted = true
+            user.voted = len(user.vote) != 0
 			ps.DispatchVoteStatus()
 		}
 		if message.RequestVoteClose {

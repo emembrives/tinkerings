@@ -36,7 +36,7 @@ func main() {
 func websocketListen() {
 	r := mux.NewRouter()
 	h := &http.Server{
-		Addr:           ":6001",
+		Addr:           ":6050",
 		Handler:        r,
 		ReadTimeout:    30 * time.Second,
 		WriteTimeout:   30 * time.Second,

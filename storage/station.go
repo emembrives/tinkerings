@@ -17,7 +17,7 @@ type Station struct {
 
 func NewStation(name, city, code string) *Station {
 	var station *Station = new(Station)
-	station.Name = strings.TrimSpace(name)
+	station.Name = strings.Replace(strings.TrimSpace(name), "/", "-", -1)
 	station.DisplayName = computeDisplayName(station.Name)
 	station.City = strings.TrimSpace(city)
 	station.code = code
@@ -50,7 +50,7 @@ func computeDisplayName(name string) string {
 
 func NewRampStation(name, city string) *Station {
 	var station *Station = new(Station)
-	station.Name = strings.TrimSpace(name)
+	station.Name = strings.Replace(strings.TrimSpace(name), "/", "-", -1)
 	station.DisplayName = computeDisplayName(station.Name)
 	station.City = strings.TrimSpace(city)
 	station.HasElevators = false

@@ -81,17 +81,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public Cursor getStations(String lineId) {
-        String rawQuery = new StringBuilder().append("SELECT ")
-                .append(DatabaseHelper.COLUMN_STATION_NAME).append(", ")
-                .append(DatabaseHelper.COLUMN_STATION_DISPLAY).append(" from ")
-                .append(DatabaseHelper.TABLE_STATIONS).append(" INNER JOIN ")
-                .append(DatabaseHelper.TABLE_LINES_STATIONS).append(" ON ")
-                .append(DatabaseHelper.TABLE_STATIONS).append(".")
-                .append(DatabaseHelper.COLUMN_STATION_NAME).append("=")
-                .append(DatabaseHelper.TABLE_LINES_STATIONS).append(".")
-                .append(DatabaseHelper.COLUMN_STATION_NAME).append(" WHERE ")
-                .append(DatabaseHelper.TABLE_LINES_STATIONS).append(".")
-                .append(DatabaseHelper.COLUMN_LINE_ID).append("=?").toString();
+        String rawQuery = new StringBuilder().append("SELECT ").append(TABLE_STATIONS).append(".")
+                .append(COLUMN_STATION_NAME).append(", ").append(TABLE_STATIONS).append(".")
+                .append(COLUMN_STATION_DISPLAY).append(", ").append(TABLE_STATIONS).append(".")
+                .append(COLUMN_STATION_WORKING).append(" from ").append(TABLE_STATIONS)
+                .append(" INNER JOIN ").append(TABLE_LINES_STATIONS).append(" ON ")
+                .append(TABLE_STATIONS).append(".").append(COLUMN_STATION_NAME).append("=")
+                .append(TABLE_LINES_STATIONS).append(".").append(COLUMN_STATION_NAME)
+                .append(" WHERE ").append(TABLE_LINES_STATIONS).append(".").append(COLUMN_LINE_ID)
+                .append("=?").toString();
         return getReadableDatabase().rawQuery(rawQuery, new String[] { lineId });
     }
 

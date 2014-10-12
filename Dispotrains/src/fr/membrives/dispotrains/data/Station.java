@@ -6,7 +6,7 @@ import java.util.Set;
 /**
  * Created by etienne on 04/10/14.
  */
-public class Station {
+public class Station implements Comparable<Station> {
     private final String name;
     private final String display;
     private final boolean working;
@@ -83,5 +83,9 @@ public class Station {
 
     public Set<Line> getLines() {
         return lines;
+    }
+
+    public int compareTo(Station another) {
+        return getDisplay().compareTo(another.getDisplay());
     }
 }

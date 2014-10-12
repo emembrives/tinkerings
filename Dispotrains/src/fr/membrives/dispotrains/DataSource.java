@@ -9,6 +9,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import fr.membrives.dispotrains.data.Elevator;
 import fr.membrives.dispotrains.data.Line;
 import fr.membrives.dispotrains.data.Station;
@@ -17,6 +18,7 @@ import fr.membrives.dispotrains.data.Station;
  * Created by etienne on 04/10/14.
  */
 public class DataSource {
+    private static final String TAG = "f.m.d.DataSource";
     private final DatabaseHelper mHelper;
     private SQLiteDatabase mDatabase;
 
@@ -86,7 +88,7 @@ public class DataSource {
     }
 
     public Set<Elevator> getElevatorsPerStation(Station station) {
-        Cursor cursor = mDatabase.query(DatabaseHelper.TABLE_LINES, new String[] {
+        Cursor cursor = mDatabase.query(DatabaseHelper.TABLE_ELEVATORS, new String[] {
                 DatabaseHelper.COLUMN_ELEVATOR_ID, DatabaseHelper.COLUMN_ELEVATOR_SITUATION,
                 DatabaseHelper.COLUMN_ELEVATOR_DIRECTION,
                 DatabaseHelper.COLUMN_ELEVATOR_STATUS_DESC,
@@ -107,6 +109,7 @@ public class DataSource {
     }
 
     public boolean addLineToDatabase(Line line) {
+        Log.d(TAG, "addLineToDatabase: " + line.getId());
         ContentValues values = new ContentValues();
         values.put(DatabaseHelper.COLUMN_LINE_ID, line.getId());
         values.put(DatabaseHelper.COLUMN_LINE_NETWORK, line.getNetwork());
@@ -115,11 +118,13 @@ public class DataSource {
     }
 
     public boolean deleteLineFromDatabase(Line line) {
+        Log.d(TAG, "deleteLineFromDatabase: " + line.getId());
         return mDatabase.delete(DatabaseHelper.TABLE_LINES, DatabaseHelper.COLUMN_LINE_ID + " =?",
                 new String[] { line.getId() }) != 0;
     }
 
     public boolean addStationToDatabase(Station station) {
+        Log.d(TAG, "addStationToDatabase: " + station.getName());
         ContentValues values = new ContentValues();
         values.put(DatabaseHelper.COLUMN_STATION_NAME, station.getName());
         values.put(DatabaseHelper.COLUMN_STATION_DISPLAY, station.getDisplay());
@@ -141,6 +146,7 @@ public class DataSource {
     }
 
     public boolean deleteStationFromDatabase(Station station) {
+        Log.d(TAG, "deleteStationFromDatabase: " + station.getName());
         mDatabase.delete(DatabaseHelper.TABLE_LINES_STATIONS, DatabaseHelper.COLUMN_STATION_NAME
                 + " =?", new String[] { station.getName() });
         mDatabase.delete(DatabaseHelper.TABLE_STATIONS, DatabaseHelper.COLUMN_STATION_NAME + " =?",
@@ -149,6 +155,7 @@ public class DataSource {
     }
 
     public boolean addElevatorToDatabase(Elevator elevator) {
+        Log.d(TAG, "addElevatorToDatabase: " + elevator.getId());
         ContentValues values = new ContentValues();
         values.put(DatabaseHelper.COLUMN_ELEVATOR_ID, elevator.getId());
         values.put(DatabaseHelper.COLUMN_ELEVATOR_DIRECTION, elevator.getDirection());
@@ -164,6 +171,7 @@ public class DataSource {
     }
 
     public boolean deleteElevatorFromDatabase(Elevator elevator) {
+        Log.d(TAG, "deleteElevatorFromDatabase: " + elevator.getId());
         return mDatabase.delete(DatabaseHelper.TABLE_ELEVATORS, DatabaseHelper.COLUMN_ELEVATOR_ID
                 + " =?", new String[] { elevator.getId() }) != 0;
     }

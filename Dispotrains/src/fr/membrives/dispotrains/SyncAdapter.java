@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,17 +65,23 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority,
             ContentProviderClient provider, SyncResult syncResult) {
         Log.d(TAG, "onPerformSync");
+        mSource.open();
         Set<Line> lines = new HashSet<Line>();
         try {
             URL dispotrains = new URL("http://dispotrains.membrives.fr/app/GetLines/");
             InputStream linesData = dispotrains.openStream();
             JSONArray jsonLineList = new JSONArray(IOUtils.toString(linesData));
+            Log.d(TAG, "Lines downloaded");
             for (int i = 0; i < jsonLineList.length(); i++) {
                 JSONObject jsonLine = jsonLineList.getJSONObject(i);
                 Line line = processLine(jsonLine);
                 for (Station station : line.getStations()) {
                     URL stationURL = new URL("http://dispotrains.membrives.fr/app/GetStation/"
-                            + station.getName());
+                            + URLEncoder.encode(station.getName(), "UTF-8").replace("+", "%20")
+                                    .replace("%2F", "/") + "/");
+                    Log.d(TAG,
+                            "Station downloaded: " + station.getName() + " from "
+                                    + stationURL.getPath());
                     InputStream stationData = stationURL.openStream();
                     JSONObject jsonStation = new JSONObject(IOUtils.toString(stationData));
                     processElevators(station, jsonStation);
@@ -96,8 +103,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private void synchronizeWithDatabase(Set<Line> lines, SyncResult syncResult) {
+        Log.d(TAG, "synchronizeWithDatabase");
         Set<Line> oldLines = mSource.getAllLines();
+        int nbLines = 0, nbStations = 0, nbElevators = 0;
         for (Line line : lines) {
+            nbLines++;
             Map<Station, Station> oldStations = new HashMap<Station, Station>();
             if (!oldLines.contains(line)) {
                 mSource.addLineToDatabase(line);
@@ -110,6 +120,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 oldLines.remove(line);
             }
             for (Station station : line.getStations()) {
+                nbStations++;
                 Map<Elevator, Elevator> oldElevators = new HashMap<Elevator, Elevator>();
                 if (!oldStations.containsKey(station)) {
                     mSource.addStationToDatabase(station);
@@ -127,12 +138,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     oldStations.remove(station);
                 }
                 for (Elevator elevator : station.getElevators()) {
+                    nbElevators++;
                     if (!oldElevators.containsKey(elevator)) {
                         mSource.addElevatorToDatabase(elevator);
                         syncResult.stats.numInserts++;
                         syncResult.stats.numEntries++;
                     } else {
-                        if (!elevator.getStatusDate().equals(oldElevators.get(elevator))) {
+                        if (!elevator.getStatusDate().equals(
+                                oldElevators.get(elevator).getStatusDate())) {
                             // Elevator status has been updated
                             mSource.addElevatorToDatabase(elevator);
                             syncResult.stats.numUpdates++;
@@ -158,6 +171,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             syncResult.stats.numDeletes++;
             syncResult.stats.numEntries++;
         }
+        Log.d(TAG, new StringBuilder("lines, stations, elevators: ").append(nbLines).append(" ")
+                .append(nbStations).append(" ").append(nbElevators).toString());
+        Log.d(TAG, new StringBuilder("SyncStats: ").append(syncResult.stats.numEntries).append(" ")
+                .append(syncResult.stats.numInserts).append(" ")
+                .append(syncResult.stats.numUpdates).append(" ")
+                .append(syncResult.stats.numDeletes).toString());
     }
 
     private Line processLine(JSONObject jsonLine) throws JSONException {

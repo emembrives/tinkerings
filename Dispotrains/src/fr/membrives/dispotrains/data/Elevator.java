@@ -5,7 +5,7 @@ import java.util.Date;
 /**
  * Created by etienne on 04/10/14.
  */
-public class Elevator {
+public class Elevator implements Comparable<Elevator> {
     private final String id;
     private final String situation;
     private final String direction;
@@ -85,5 +85,9 @@ public class Elevator {
         } else if (!situation.equals(other.situation))
             return false;
         return true;
+    }
+
+    public int compareTo(Elevator another) {
+        return getId().compareTo(another.getId());
     }
 }

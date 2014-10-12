@@ -6,7 +6,7 @@ import java.util.Set;
 /**
  * A line
  */
-public class Line {
+public class Line implements Comparable<Line> {
     private final String id;
     private final String network;
     private final Set<Station> stations;
@@ -62,5 +62,11 @@ public class Line {
         } else if (!network.equals(other.network))
             return false;
         return true;
+    }
+
+    public int compareTo(Line another) {
+        String lhsString = getNetwork() + " " + getId();
+        String rhsString = another.getNetwork() + " " + another.getId();
+        return lhsString.compareTo(rhsString);
     }
 }

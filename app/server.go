@@ -50,6 +50,18 @@ func ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		var station bson.M
 		c.Find(bson.M{"name": stationName}).One(&station)
 		json.NewEncoder(w).Encode(&station)
+	} else if urlComponents[2] == "GetStations" {
+		c := session.DB("dispotrains").C("stations")
+		var stations []bson.M = make([]bson.M, 0)
+		if err := c.Find(nil).All(&stations); err != nil {
+			log.Println(err)
+		}
+		jsonStations := make([]bson.M, 0)
+		for _, station := range stations {
+			delete(station, "_id")
+			jsonStations = append(jsonStations, station)
+		}
+		json.NewEncoder(w).Encode(&jsonStations)
 	} else {
 		log.Println("Not a recognized action")
 	}

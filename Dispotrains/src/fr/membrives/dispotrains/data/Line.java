@@ -3,10 +3,13 @@ package fr.membrives.dispotrains.data;
 import java.util.HashSet;
 import java.util.Set;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * A line
  */
-public class Line implements Comparable<Line> {
+public class Line implements Comparable<Line>, Parcelable {
     private final String id;
     private final String network;
     private final Set<Station> stations;
@@ -69,4 +72,26 @@ public class Line implements Comparable<Line> {
         String rhsString = another.getNetwork() + " " + another.getId();
         return lhsString.compareTo(rhsString);
     }
+
+    public int describeContents() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(id);
+        dest.writeString(network);
+    }
+
+    public static final Parcelable.Creator<Line> CREATOR = new Parcelable.Creator<Line>() {
+        public Line createFromParcel(Parcel source) {
+            String id = source.readString();
+            String network = source.readString();
+            return new Line(id, network);
+        }
+
+        public Line[] newArray(int size) {
+            return new Line[size];
+        }
+    };
 }

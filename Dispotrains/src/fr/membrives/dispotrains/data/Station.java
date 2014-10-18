@@ -3,10 +3,13 @@ package fr.membrives.dispotrains.data;
 import java.util.HashSet;
 import java.util.Set;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by etienne on 04/10/14.
  */
-public class Station implements Comparable<Station> {
+public class Station implements Comparable<Station>, Parcelable {
     private final String name;
     private final String display;
     private final boolean working;
@@ -88,4 +91,28 @@ public class Station implements Comparable<Station> {
     public int compareTo(Station another) {
         return getDisplay().compareTo(another.getDisplay());
     }
+
+    public int describeContents() {
+        return 0;
+    }
+
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(display);
+        dest.writeBooleanArray(new boolean[] { working });
+    }
+
+    public static final Parcelable.Creator<Station> CREATOR = new Parcelable.Creator<Station>() {
+        public Station createFromParcel(Parcel source) {
+            String name = source.readString();
+            String display = source.readString();
+            boolean[] workingArray = new boolean[1];
+            source.readBooleanArray(workingArray);
+            return new Station(name, display, workingArray[0]);
+        }
+
+        public Station[] newArray(int size) {
+            return new Station[size];
+        }
+    };
 }

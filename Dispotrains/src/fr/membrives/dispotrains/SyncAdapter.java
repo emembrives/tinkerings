@@ -191,7 +191,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         JSONArray goodStations = jsonLine.getJSONArray("goodStations");
-        for (int j = 0; j < badStations.length(); j++) {
+        for (int j = 0; j < goodStations.length(); j++) {
             JSONObject jsonStation = goodStations.getJSONObject(j);
             Station station = new Station(jsonStation.getString("name"),
                     jsonStation.getString("displayname"), true);

@@ -3,6 +3,7 @@ package fr.membrives.dispotrains.adapters;
 import java.util.List;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +32,8 @@ public class StationAdapter extends ArrayAdapter<Station> {
         stationName.setText(station.getDisplay());
         if (!station.getWorking()) {
             stationName.setBackgroundColor(getContext().getResources().getColor(R.color.problem));
+        } else {
+            stationName.setBackgroundColor(Color.TRANSPARENT);
         }
         // Return the completed view to render on screen
         return convertView;

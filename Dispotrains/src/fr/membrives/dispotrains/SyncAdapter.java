@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,6 +25,10 @@ import android.content.Context;
 import android.content.SyncResult;
 import android.os.Bundle;
 import android.util.Log;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 import fr.membrives.dispotrains.data.Elevator;
 import fr.membrives.dispotrains.data.Line;
 import fr.membrives.dispotrains.data.Station;
@@ -66,27 +70,18 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             ContentProviderClient provider, SyncResult syncResult) {
         Log.d(TAG, "onPerformSync");
         mSource.open();
-        Set<Line> lines = new HashSet<Line>();
+        Multimap<Line, Station> lines = HashMultimap.create();
         try {
-            URL dispotrains = new URL("http://dispotrains.membrives.fr/app/GetLines/");
-            InputStream linesData = dispotrains.openStream();
-            JSONArray jsonLineList = new JSONArray(IOUtils.toString(linesData));
-            Log.d(TAG, "Lines downloaded");
-            for (int i = 0; i < jsonLineList.length(); i++) {
-                JSONObject jsonLine = jsonLineList.getJSONObject(i);
-                Line line = processLine(jsonLine);
-                for (Station station : line.getStations()) {
-                    URL stationURL = new URL("http://dispotrains.membrives.fr/app/GetStation/"
-                            + URLEncoder.encode(station.getName(), "UTF-8").replace("+", "%20")
-                                    .replace("%2F", "/") + "/");
-                    Log.d(TAG,
-                            "Station downloaded: " + station.getName() + " from "
-                                    + stationURL.getPath());
-                    InputStream stationData = stationURL.openStream();
-                    JSONObject jsonStation = new JSONObject(IOUtils.toString(stationData));
-                    processElevators(station, jsonStation);
-                }
-                lines.add(line);
+            URL stationsURL = new URL("http://dispotrains.membrives.fr/app/GetStations/");
+            InputStream stationsData = stationsURL.openStream();
+            JSONArray jsonStationList = new JSONArray(IOUtils.toString(stationsData));
+            for (int i = 0; i < jsonStationList.length(); i++) {
+                JSONObject jsonStation = jsonStationList.getJSONObject(i);
+                Multimap<Line, Station> station = processStation(jsonStation);
+                lines.putAll(station);
+            }
+            for (Map.Entry<Line, Station> entry : lines.entries()) {
+                entry.getValue().addToLine(entry.getKey());
             }
         } catch (MalformedURLException e) {
             Log.e(TAG, "Unable to sync", e);
@@ -99,7 +94,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             return;
         }
 
-        synchronizeWithDatabase(lines, syncResult);
+        synchronizeWithDatabase(lines.keySet(), syncResult);
     }
 
     private void synchronizeWithDatabase(Set<Line> lines, SyncResult syncResult) {
@@ -127,7 +122,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     syncResult.stats.numInserts++;
                     syncResult.stats.numEntries++;
                 } else {
-                    if (station.getWorking() != oldStations.get(station).getWorking()) {
+                    if (station.getName().equalsIgnoreCase("Auber")) {
+                        Log.d(TAG, "Auber station");
+                    }
+                    Station oldStation = oldStations.get(station);
+                    if (station.getWorking() != oldStation.getWorking()) {
                         mSource.addStationToDatabase(station);
                         syncResult.stats.numUpdates++;
                         syncResult.stats.numEntries++;
@@ -179,41 +178,38 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 .append(syncResult.stats.numDeletes).toString());
     }
 
-    private Line processLine(JSONObject jsonLine) throws JSONException {
-        Line line = new Line(jsonLine.getString("id"), jsonLine.getString("network"));
+    private Multimap<Line, Station> processStation(JSONObject jsonStation) throws JSONException {
+        String name = jsonStation.getString("name");
+        String displayName = jsonStation.getString("displayname");
 
-        JSONArray badStations = jsonLine.getJSONArray("badStations");
-        for (int j = 0; j < badStations.length(); j++) {
-            JSONObject jsonStation = badStations.getJSONObject(j);
-            Station station = new Station(jsonStation.getString("name"),
-                    jsonStation.getString("displayname"), false);
-            station.addToLine(line);
-        }
-
-        JSONArray goodStations = jsonLine.getJSONArray("goodStations");
-        for (int j = 0; j < goodStations.length(); j++) {
-            JSONObject jsonStation = goodStations.getJSONObject(j);
-            Station station = new Station(jsonStation.getString("name"),
-                    jsonStation.getString("displayname"), true);
-            station.addToLine(line);
-        }
-        return line;
-    }
-
-    private void processElevators(Station station, JSONObject jsonStation) throws JSONException {
-        if (!jsonStation.getBoolean("haselevators")) {
-            return;
-        }
-        JSONArray elevators = jsonStation.getJSONArray("elevators");
-        for (int i = 0; i < elevators.length(); i++) {
-            JSONObject jsonElevator = elevators.getJSONObject(i);
+        List<Elevator> elevators = new ArrayList<Elevator>();
+        boolean stationWorking = true;
+        JSONArray jsonElevators = jsonStation.getJSONArray("elevators");
+        for (int i = 0; i < jsonElevators.length(); i++) {
+            JSONObject jsonElevator = jsonElevators.getJSONObject(i);
             JSONObject jsonStatus = jsonElevator.getJSONObject("status");
             Date lastUpdate = ISODateTimeFormat.dateTimeParser()
                     .parseDateTime(jsonStatus.getString("lastupdate")).toDate();
             Elevator elevator = new Elevator(jsonElevator.getString("id"),
                     jsonElevator.getString("situation"), jsonElevator.getString("direction"),
                     jsonStatus.getString("state"), lastUpdate);
+            elevators.add(elevator);
+            if (stationWorking && !elevator.getStatusDescription().equalsIgnoreCase("Disponible")) {
+                stationWorking = false;
+            }
+        }
+        Station station = new Station(name, displayName, stationWorking);
+        for (Elevator elevator : elevators) {
             station.addElevator(elevator);
         }
+
+        Multimap<Line, Station> lines = HashMultimap.create();
+        JSONArray jsonLines = jsonStation.getJSONArray("lines");
+        for (int i = 0; i < jsonLines.length(); i++) {
+            JSONObject jsonLine = jsonLines.getJSONObject(i);
+            Line line = new Line(jsonLine.getString("id"), jsonLine.getString("network"));
+            lines.put(line, station);
+        }
+        return lines;
     }
 }

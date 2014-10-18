@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,7 +43,10 @@ public class ElevatorAdapter extends ArrayAdapter<Elevator> {
 
         if (!elevator.getStatusDescription().equalsIgnoreCase("Disponible")) {
             convertView.setBackgroundColor(getContext().getResources().getColor(R.color.problem));
+        } else {
+            convertView.setBackgroundColor(Color.TRANSPARENT);
         }
+
         // Return the completed view to render on screen
         return convertView;
     }

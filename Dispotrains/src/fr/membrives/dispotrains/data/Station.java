@@ -89,7 +89,11 @@ public class Station implements Comparable<Station>, Parcelable {
     }
 
     public int compareTo(Station another) {
-        return getDisplay().compareTo(another.getDisplay());
+        if (this.working == another.working) {
+            return getDisplay().compareTo(another.getDisplay());
+        } else {
+            return this.working ? 1 : -1;
+        }
     }
 
     public int describeContents() {

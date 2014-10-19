@@ -6,7 +6,7 @@
 
     <uses-sdk
         android:minSdkVersion="16"
-        android:targetSdkVersion="19" />
+        android:targetSdkVersion="20" />
 
     <uses-permission
             android:name="android.permission.INTERNET"/>
@@ -40,7 +40,8 @@
             android:parentActivityName="StationListActivity">
         </activity>
         
-        <service android:name="fr.membrives.dispotrains.AuthenticatorService" >
+        <service
+            android:name="fr.membrives.dispotrains.AuthenticatorService" >
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -56,10 +57,9 @@
             android:exported="false"
             android:syncable="true" >
         </provider>
-        
+
         <service
-            android:name=".SyncService"
-            android:exported="true" >
+            android:name=".SyncService" >
             <intent-filter>
                 <action android:name="android.content.SyncAdapter" />
             </intent-filter>
@@ -68,5 +68,6 @@
                 android:name="android.content.SyncAdapter"
                 android:resource="@xml/sync_adapter" />
         </service>
-     </application>
+    </application>
+
 </manifest>

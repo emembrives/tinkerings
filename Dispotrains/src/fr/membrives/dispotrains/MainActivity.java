@@ -38,6 +38,7 @@ public class MainActivity extends ListActivity {
         mAccount = CreateSyncAccount(this);
         // Turn on automatic syncing for the default account and authority
         ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+        ContentResolver.addPeriodicSync(mAccount, AUTHORITY, new Bundle(), 1800);
         ContentResolver.requestSync(mAccount, AUTHORITY, new Bundle());
 
         mDataSource = new DataSource(this);

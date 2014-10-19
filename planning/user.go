@@ -35,6 +35,7 @@ type ServerMessage struct {
 	VotedUsers int
 	TotalUsers int
 	Results    []Result `json:"Results,omitempty"`
+	Vote       string `json:"Vote,omitempty"`
 	Reset      bool
 }
 
@@ -67,7 +68,7 @@ func (u *User) SendVoteResults(voted, total int, results map[string]int) error {
 		resultItems = append(resultItems, Result{k, v})
 	}
 	sort.Sort(ByVote(resultItems))
-	msg := ServerMessage{VotedUsers: voted, TotalUsers: total, Results: resultItems}
+	msg := ServerMessage{VotedUsers: voted, TotalUsers: total, Results: resultItems, Vote:u.vote}
 	log.Println("Sending", msg)
 	return u.conn.WriteJSON(msg)
 }

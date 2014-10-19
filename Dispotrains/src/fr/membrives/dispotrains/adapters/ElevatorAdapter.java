@@ -2,10 +2,12 @@ package fr.membrives.dispotrains.adapters;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+
+import org.joda.time.format.DateTimeFormat;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +40,8 @@ public class ElevatorAdapter extends ArrayAdapter<Elevator> {
 
         TextView dateView = (TextView) convertView.findViewById(R.id.date);
         Date date = elevator.getStatusDate();
-        String dateStr = DateFormat.getMediumDateFormat(context).format(date);
+        String dateStr = DateTimeFormat.forStyle("MS").withLocale(Locale.getDefault())
+                .print(date.getTime());
         dateView.setText(dateStr);
 
         if (!elevator.getStatusDescription().equalsIgnoreCase("Disponible")) {

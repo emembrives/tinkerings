@@ -2,7 +2,8 @@
 <resources>
 
     <string name="app_name">Dispotrains</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="app_descrip"><p>Les informations sont données à titre indicatif uniquement. Il est possible que les informations qu\'il contient soient incomplètes, inexactes ou en retard par rapport à la situation réelle. N\'hésitez pas à me contacter (etienne+dispotrains@membrives.fr) si vous repérez de tels problèmes afin que je puisse y remédier.</p><p>Le contenu de cette application est généré de manière automatique à partir de multiples sources publiques sur le réseau RATP et SNCF d\'Ile-de-France, son accessibilité et l\'état des équipements en gare.</p>
+    <p>Cette application est distribuée sous license Apache 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html). Le code source est disponible à l\'addresse https://github.com/sterops/tinkerings/tree/master/Dispotrains .</p></string>
+    <string name="action_about">A propos</string>
 
 </resources>

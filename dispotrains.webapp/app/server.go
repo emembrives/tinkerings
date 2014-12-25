@@ -75,10 +75,16 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 	defer session.Close()
-	c := session.DB("dispotrains").C("lines")
-	var lines LineSlice = make(LineSlice, 0)
-	c.Find(nil).Sort("value.network", "value.id").All(&lines)
-	homeTmpl.Execute(w, lines.Lines())
+	c := session.DB("dispotrains").C("stations")
+
+    vars := mux.Vars(req)
+    stationName := vars["station"]
+
+	var station storage.Station
+    c.Find(bson.M{"name": stationName}).One(&station)
+	if err = stationTmpl.Execute(w, station); err != nil {
+        log.Fatal(err)
+    }
 }
 
 func main() {

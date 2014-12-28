@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	homeTmpl    = template.Must(template.ParseFiles("templates/lines.html"))
-	lineTmpl    = template.Must(template.ParseFiles("templates/line.html"))
-	stationTmpl = template.Must(template.ParseFiles("templates/station.html"))
+	homeTmpl    = template.Must(template.ParseFiles("templates/lines.html", "templates/footer.html", "templates/header.html"))
+	lineTmpl    = template.Must(template.ParseFiles("templates/line.html", "templates/footer.html", "templates/header.html"))
+	stationTmpl = template.Must(template.ParseFiles("templates/station.html", "templates/footer.html", "templates/header.html"))
 )
 
 type Line struct {
@@ -34,8 +34,8 @@ type LineSlice []LineHolder
 
 type DisplayStation struct {
 	storage.Station
-    DisplayName string
-	Elevators []*LocElevator
+	DisplayName string
+	Elevators   []*LocElevator
 }
 
 type LocElevator storage.Elevator
@@ -102,8 +102,8 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 
 func CacheRequest(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        w.Header().Set("Cache-control", "public, max-age=259200")
-        h.ServeHTTP(w, r)
+		w.Header().Set("Cache-control", "public, max-age=259200")
+		h.ServeHTTP(w, r)
 	})
 }
 

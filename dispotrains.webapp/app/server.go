@@ -34,6 +34,7 @@ type LineSlice []LineHolder
 
 type DisplayStation struct {
 	storage.Station
+    DisplayName string
 	Elevators []*LocElevator
 }
 
@@ -99,12 +100,19 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func CacheRequest(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Cache-control", "public, max-age=259200")
+        h.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", HomeHandler)
 	r.HandleFunc("/ligne/{line}", LineHandler)
 	r.HandleFunc("/gare/{station}", StationHandler)
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	r.PathPrefix("/static/").Handler(CacheRequest(http.StripPrefix("/static/", http.FileServer(http.Dir("static")))))
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":9000", nil))
 }

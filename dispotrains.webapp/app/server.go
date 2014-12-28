@@ -2,13 +2,13 @@ package main
 
 import (
 	"html/template"
-    "log"
+	"log"
 	"net/http"
 
-    "github.com/sterops/tinkerings/dispotrains.webapp/storage"
+	"github.com/sterops/tinkerings/dispotrains.webapp/storage"
 
-    "github.com/eknkc/dateformat"
-    "github.com/gorilla/mux"
+	"github.com/eknkc/dateformat"
+	"github.com/gorilla/mux"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 )
@@ -20,10 +20,10 @@ var (
 )
 
 type Line struct {
-	Network  string
-	ID       string
-    GoodStations []*storage.Station `bson:"goodStations"`
-    BadStations []*storage.Station `bson:"badStations"`
+	Network      string
+	ID           string
+	GoodStations []*storage.Station `bson:"goodStations"`
+	BadStations  []*storage.Station `bson:"badStations"`
 }
 
 type LineHolder struct {
@@ -33,14 +33,14 @@ type LineHolder struct {
 type LineSlice []LineHolder
 
 type DisplayStation struct {
-    storage.Station
-	Elevators    []*LocElevator
+	storage.Station
+	Elevators []*LocElevator
 }
 
 type LocElevator storage.Elevator
 
 func (e *LocElevator) LocalStatusDate() string {
-    return dateformat.FormatLocale(e.Status.LastUpdate, "ddd D MMM à HH:MM", dateformat.French)
+	return dateformat.FormatLocale(e.Status.LastUpdate, "ddd D MMM à HH:MM", dateformat.French)
 }
 
 func (ls LineSlice) Lines() []Line {
@@ -71,14 +71,14 @@ func LineHandler(w http.ResponseWriter, req *http.Request) {
 	defer session.Close()
 	c := session.DB("dispotrains").C("lines")
 
-    vars := mux.Vars(req)
-    lineId := vars["line"]
+	vars := mux.Vars(req)
+	lineId := vars["line"]
 
 	var line LineHolder
-    c.Find(bson.M{"_id": lineId}).One(&line)
+	c.Find(bson.M{"_id": lineId}).One(&line)
 	if err = lineTmpl.Execute(w, line.Value); err != nil {
-        log.Fatal(err)
-    }
+		log.Fatal(err)
+	}
 }
 
 func StationHandler(w http.ResponseWriter, req *http.Request) {
@@ -89,14 +89,14 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 	defer session.Close()
 	c := session.DB("dispotrains").C("stations")
 
-    vars := mux.Vars(req)
-    stationName := vars["station"]
+	vars := mux.Vars(req)
+	stationName := vars["station"]
 
 	var station DisplayStation
-    c.Find(bson.M{"name": stationName}).One(&station)
+	c.Find(bson.M{"name": stationName}).One(&station)
 	if err = stationTmpl.Execute(w, station); err != nil {
-        log.Fatal(err)
-    }
+		log.Fatal(err)
+	}
 }
 
 func main() {
@@ -104,7 +104,7 @@ func main() {
 	r.HandleFunc("/", HomeHandler)
 	r.HandleFunc("/ligne/{line}", LineHandler)
 	r.HandleFunc("/gare/{station}", StationHandler)
-    r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.Handle("/", r)
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":9000", nil))
 }

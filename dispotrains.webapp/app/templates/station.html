@@ -3,11 +3,16 @@
     <title>{{ .DisplayName }} - Dispotrains</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
-    <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
-    <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
-    <script src="static/moment.min.js"></script>
-    <script src="static/fr.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="/static/css/font-awesome.min.css"></script>
+    <link rel="stylesheet" href="/static/css/jquerymobile.nativedroid.css"></script>
+    <link rel="stylesheet" href="/static/css/jquerymobile.nativedroid.light.css"></script>
+    <link rel="stylesheet" href="/static/css/jquerymobile.nativedroid.color.yellow.css"></script>
+    <link rel="stylesheet" href="/static/css/dispotrains.css"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="/static/moment.min.js"></script>
+    <script src="/static/fr.js"></script>
     <script type="text/javascript">
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-31909461-1']);
@@ -23,25 +28,22 @@
     </head>
     <body id="app">
     <div id="station" data-role="page" data-add-back-btn="true">
-        <div data-role="header" data-position="fixed"><h1></h1>
-            <a href="/" data-icon="home" data-iconpos="notext">Accueil</a>
-            <a href="#help" data-rel="dialog" data-transition="pop" data-icon="info" data-iconpos="notext">À propos</a>
+        <div data-role="header" data-position="fixed">
+            <a href="/" data-role="button" data-icon-post="notext" title="Accueil"><i class="fa fa-home"></i></a>
+            <h1>{{ .DisplayName }} - Dispotrains</h1>
+            <a href="#help" data-rel="dialog" data-transition="pop" title="A propos"><i class="fa fa-info-circle"></i></a>
         </div>
 
         <div data-role="content">
             <div data-role="collapsible-set" data-theme="" data-content-theme="">
-                <div data-role="collapsible" data-collapsed="true" id="lines">
-                    <h2>Lignes</h3>
-                    <div class="data"></div>
-                </div>
                 <div data-role="collapsible" data-collapsed="false" id="elevators">
                     <h2>Ascenseurs</h3>
                     <div class="data">
                         <ul data-role="listview" data-inset=false data-filter=false>
                             {{ range .Elevators }}
-                            <li {{if not (eq .Status.State "Disponible")}}data-icon="alert" data-theme="e"{{end}}>
+                            <li {{if not (eq .Status.State "Disponible")}}data-icon="alert" data-theme="b" class="ui-custom-alert"{{end}}>
                             <h3 style="white-space: normal">{{.Situation}}</h3>
-                            <p>{{.Direction}} - Situation en date du <strong>{{.Status.LastUpdate}}</strong></p>
+                            <p>{{.Direction}} - Situation en date du <strong>{{.LocalStatusDate}}</strong></p>
                             <p class="ui-li-aside">{{.Status.State}}</p>
                             </li>
                             {{end}}
@@ -78,6 +80,7 @@
             <p>Ce site est donné à titre indicatif uniquement. Il est possible que les informations qu'il contient soient incomplètes, inexactes ou en retard par rapport à la situation réelle.
             N'hésitez pas à me contacter si vous repérez de tels problèmes afin que je puisse y remédier.</p>
             <p>Le contenu de ce site est généré de manière automatique à partir de multiples sources publiques sur le réseau RATP et SNCF d'Ile-de-France, son accessibilité et l'état des équipements en gare.</p>
+            <p>Thème par <a href="http://nativedroid.godesign.ch">Raphael Wildhaber</a></p>
     	</div>
     </div>
     </body>

@@ -7,7 +7,8 @@ import (
 
     "github.com/sterops/tinkerings/dispotrains.webapp/storage"
 
-	"github.com/gorilla/mux"
+    "github.com/eknkc/dateformat"
+    "github.com/gorilla/mux"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 )
@@ -30,6 +31,17 @@ type LineHolder struct {
 }
 
 type LineSlice []LineHolder
+
+type DisplayStation struct {
+    storage.Station
+	Elevators    []*LocElevator
+}
+
+type LocElevator storage.Elevator
+
+func (e *LocElevator) LocalStatusDate() string {
+    return dateformat.FormatLocale(e.Status.LastUpdate, "ddd D MMM à HH:MM", dateformat.French)
+}
 
 func (ls LineSlice) Lines() []Line {
 	r := make([]Line, len(ls))
@@ -80,7 +92,7 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
     vars := mux.Vars(req)
     stationName := vars["station"]
 
-	var station storage.Station
+	var station DisplayStation
     c.Find(bson.M{"name": stationName}).One(&station)
 	if err = stationTmpl.Execute(w, station); err != nil {
         log.Fatal(err)

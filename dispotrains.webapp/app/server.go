@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
@@ -100,6 +101,25 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func AppHandler(w http.ResponseWriter, req *http.Request) {
+	session, err := mgo.Dial("localhost")
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+	c := session.DB("dispotrains").C("stations")
+	var stations []bson.M = make([]bson.M, 0)
+	if err := c.Find(nil).All(&stations); err != nil {
+		log.Println(err)
+	}
+	jsonStations := make([]bson.M, 0)
+	for _, station := range stations {
+		delete(station, "_id")
+		jsonStations = append(jsonStations, station)
+	}
+	json.NewEncoder(w).Encode(&jsonStations)
+}
+
 func CacheRequest(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-control", "public, max-age=259200")
@@ -112,6 +132,7 @@ func main() {
 	r.HandleFunc("/", HomeHandler)
 	r.HandleFunc("/ligne/{line}", LineHandler)
 	r.HandleFunc("/gare/{station}", StationHandler)
+	r.HandleFunc("/app/GetStations/", AppHandler)
 	r.PathPrefix("/static/").Handler(CacheRequest(http.StripPrefix("/static/", http.FileServer(http.Dir("static")))))
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":9000", nil))

@@ -5,10 +5,16 @@ import (
 	"strings"
 )
 
+type Coordinates struct {
+    Latitude float64
+    Longitude float64
+}
+
 type Station struct {
 	DisplayName  string
 	Name         string
 	City         string
+    Position     Coordinates
 	Lines        []*Line
 	Elevators    []*Elevator
 	code         string

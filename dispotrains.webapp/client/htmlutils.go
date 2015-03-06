@@ -1,7 +1,7 @@
 package client
 
 import (
-	"exp/html"
+	"golang.org/x/net/html"
 )
 
 func findNode(n *html.Node, tagName string) *html.Node {

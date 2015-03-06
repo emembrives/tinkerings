@@ -1,8 +1,8 @@
 package main
 
 import (
-	"infomobi/client"
-	"infomobi/storage"
+	"github.com/emembrives/tinkerings/dispotrains.webapp/client"
+	"github.com/emembrives/tinkerings/dispotrains.webapp/storage"
 	"labix.org/v2/mgo"
 	"labix.org/v2/mgo/bson"
 )

@@ -1,11 +1,12 @@
 package client
 
 import (
-	"exp/html"
-	"infomobi/storage"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/emembrives/tinkerings/dispotrains.webapp/storage"
+	"golang.org/x/net/html"
 )
 
 func GetAllLines() ([]*storage.Line, error) {

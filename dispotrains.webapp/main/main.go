@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/emembrives/tinkerings/dispotrains.webapp/client"
 	"github.com/emembrives/tinkerings/dispotrains.webapp/storage"
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const mapStationsToLines string = `function() {
@@ -117,6 +117,18 @@ func main() {
 	}
 
 	c = session.DB("dispotrains").C("statuses")
+    index := mgo.Index{
+        Key: []string{"state", "lastupdate", "elevator"},
+        Unique: true,
+        DropDups: true,
+        Background: true, // See notes.
+        Sparse: true,
+    }
+    err = c.EnsureIndex(index)
+	if err != nil {
+		panic(err)
+	}
+    var statuses []bson.M
 	for _, station := range stations {
 		for _, elevator := range station.GetElevators() {
 			bsonStatus := bson.M{
@@ -124,8 +136,12 @@ func main() {
 				"lastupdate": elevator.Status.LastUpdate,
 				"elevator":   elevator.ID,
 			}
-			c.Upsert(bsonStatus, bsonStatus)
+            statuses = append(statuses, bsonStatus)
 		}
+	}
+    err = c.Insert(statuses)
+	if err != nil {
+		panic(err)
 	}
 }
 

@@ -10,8 +10,8 @@ import (
 
 	"github.com/eknkc/dateformat"
 	"github.com/gorilla/mux"
-	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var (

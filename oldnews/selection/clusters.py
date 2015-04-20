@@ -8,10 +8,12 @@ if platform.python_implementation() == "PyPy":
 import argparse
 import csv
 import fileinput
-import json
-import sys
 import itertools
+import json
+import logging
+import logging.config
 import networkx as nx
+import sys
 
 from distances import *
 from clean_text import clean_text
@@ -103,36 +105,32 @@ def compute_clusters(old_tweets, new_tweets, distances):
     old_clusters = graph_cutting(all_tweets, distances, skip, is_old, 50)
     if len(old_clusters) < 10:
         old_clusters.extend(graph_cutting(all_tweets, distances, skip, is_old, 30))
+    logger.debug("#old clusters@30: %d", len(old_clusters))
     if len(old_clusters) < 10:
         old_clusters.extend(graph_cutting(all_tweets, distances, skip, is_old, 20))
-    if len(old_clusters) < 10:
+    logger.debug("#old clusters@20: %d", len(old_clusters))
+    base = len(old_clusters)
+    if len(old_clusters) < 5:
         for i in range(N_old_tweets):
             if i not in skip:
                 old_clusters.append([i])
+                skip.add(i)
+    logger.info("#old clusters: %d", len(old_clusters))
+    logger.debug("tweets in old clusters: %d", len(skip))
 
     # Compute new clusters
     new_clusters = graph_cutting(all_tweets, distances, skip, is_new, 100)
     if len(new_clusters) < 10:
         new_clusters.extend(graph_cutting(all_tweets, distances, skip, is_new, 50))
+    logger.debug("#new clusters@50: %d", len(new_clusters))
     if len(new_clusters) < 10:
         new_clusters.extend(graph_cutting(all_tweets, distances, skip, is_new, 30))
+    logger.debug("#new clusters@30: %d", len(new_clusters))
     if len(new_clusters) < 10:
         new_clusters.extend(graph_cutting(all_tweets, distances, skip, is_new, 20))
+    logger.info("#new clusters: %d", len(new_clusters))
+    logger.debug("tweets in new clusters: %d", len(skip))
 
-    return old_clusters, new_clusters
-
-    # Comment above to print cluster info
-    comp_index = 0
-    for comp in old_clusters + new_clusters:
-        print ""
-        print "Component", comp_index,":"
-        for node in comp:
-            if node < N_old_tweets:
-                text = "[O]: " + old_tweets[node]['text']
-            else:
-                text = "[N]: " + new_tweets[node - N_old_tweets]['text']
-            print text
-        comp_index += 1
     return old_clusters, new_clusters
 
 def get_distance(x, y, distances):
@@ -153,10 +151,45 @@ def reverse_clusters(clusters):
             reverse[t] = i
     return reverse
 
+class MatchingStats(object):
+    def __init__(self):
+        self.cluster_distances = []
+        self.new_cluster_old_cluster_match = 0
+        self.new_cluster_no_old_match = 0
+        self.old_cluster_no_new_match = 0
+
+    def add_distance(self, d):
+        self.cluster_distances.append(d)
+
+    def add_match(self, new_index, old_index):
+        if new_index >= 0 and old_index >= 0:
+            self.new_cluster_old_cluster_match += 1
+        elif new_index < 0:
+            self.old_cluster_no_new_match += 1
+        elif old_index < 0:
+            self.new_cluster_no_old_match += 1
+
+    def log(self, logger):
+        logger.info("Clusters matched: new-old %d, new-0 %d, 0-old %d",
+                self.new_cluster_old_cluster_match,
+                self.new_cluster_no_old_match,
+                self.old_cluster_no_new_match)
+        self.cluster_distances.sort()
+        logger.debug("Distance distribution: min %f, 1st quartile %f, "
+                "median %f, mean %f, 3rd quartile %f, max %f",
+                min(self.cluster_distances),
+                self.cluster_distances[len(self.cluster_distances)/4],
+                self.cluster_distances[len(self.cluster_distances)/2],
+                sum(self.cluster_distances)/float(len(self.cluster_distances)),
+                self.cluster_distances[(3*len(self.cluster_distances))/4],
+                max(self.cluster_distances))
+
+
 def matching_clusters(new_clusters, old_tweets, old_clusters, distances):
     reversed_old = reverse_clusters(old_clusters)
     matches = {}
     skip = set()
+    stats = MatchingStats()
     for new_index in range(len(new_clusters)):
         cluster_matches = []
         for old_tweet in range(len(old_tweets)):
@@ -164,31 +197,22 @@ def matching_clusters(new_clusters, old_tweets, old_clusters, distances):
                     new_clusters[new_index],
                     old_tweet,
                     distances)
+            stats.add_distance(d)
             if d > 10:
                 old_cluster = -1
                 if old_tweet in reversed_old:
                     old_cluster = reversed_old[old_tweet]
                     skip.add(old_cluster)
                 cluster_matches.append((old_tweet, d, new_index, old_cluster))
+                stats.add_match(new_index, old_cluster)
         matches[new_index] = cluster_matches
     for old_index in range(len(old_clusters)):
         if old_index in skip:
             continue
         matches[-old_index] = map(lambda t: (t, 1, -1, old_index), old_clusters[old_index])
-
+        stats.add_match(-1, old_index)
+    stats.log(logger)
     return matches
-
-
-def print_matches(new_clusters, new_tweets, old_tweets, matches):
-    for new_cluster_index, matched_old_tweets in matches.items():
-        print "Cluster %d:" % new_cluster_index
-        if len(matched_old_tweets) == 0:
-            continue
-        for tweet_index in new_clusters[new_cluster_index]:
-            print "[N] %s" % new_tweets[tweet_index - len(old_tweets)]['text']
-        for tweet_index, val, _, _ in matched_old_tweets:
-            print "[O, %.3f] %s" % (val, old_tweets[tweet_index]['text'])
-
 
 def print_matched_tweets(output_path, old_tweets, matches):
     output = []
@@ -206,24 +230,21 @@ parser.add_argument("--bigrams", default="data/bigrams.csv", help="Bigrams input
 parser.add_argument("--input_old", default="data/tweets.json", help="Old tweets input file")
 parser.add_argument("--input_new", default="data/tweets.json", help="New tweets input file")
 parser.add_argument("--output", default="data/output.json", help="Tweets output file")
+parser.add_argument("--debug", action='store_true', default=False, help="Log debug information")
 
 args = parser.parse_args()
 
-print "Loading bigrams"
+logging.config.fileConfig('data/logging.conf')
+logger = logging.getLogger('selection')
+
 unigrams, bigrams = load_bigrams(args.unigrams, args.bigrams)
-print "Loading old tweets"
 old_tweets = load_tweets(args.input_old)
-print "Loading new tweets"
 new_tweets = load_tweets(args.input_new)
 
-print "Computing distances"
 distances = distance_matrix(unigrams, bigrams, old_tweets+new_tweets)
 
 #write_to_file()
 #hierarchical_clusters()
-print "Computing graph cuts"
 old_clusters, new_clusters = compute_clusters(old_tweets, new_tweets, distances)
-print ""
-print "Matching clusters"
 matches = matching_clusters(new_clusters, old_tweets, old_clusters, distances)
 print_matched_tweets(args.output, old_tweets, matches)

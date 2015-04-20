@@ -1,6 +1,8 @@
 import argparse
-import json
 import datetime
+import json
+import logging
+import logging.config
 from dateutil import tz
 
 from ortools.linear_solver import pywraplp
@@ -15,6 +17,9 @@ class MultiDict(object):
         self.__data[key].append(value)
         return self.get(key)
     
+    def __contains__(self, key):
+        return key in self.__data
+
     def get(self, key):
         return self.__data[key]
 
@@ -45,7 +50,7 @@ def process_tweets(tweets):
     # Creating variables
     tweet_variables = []
     for tweet_id in range(len(tweets)):
-        tweet_variables.append(solver.BoolVar("t%d" % tweet_id))
+        tweet_variables.append(solver.IntVar(0, 1, "t%d" % tweet_id))
 
     old_cluster_count_variables = []
     old_cluster_bool_variables = []
@@ -54,7 +59,7 @@ def process_tweets(tweets):
         solver.Add(variable == solver.Sum([tweet_variables[i] for i in old_clusters.get(cluster)]))
         old_cluster_count_variables.append(variable)
 
-        variable = solver.BoolVar("ocb%d" % cluster)
+        variable = solver.IntVar(0, 1, "ocb%d" % cluster)
         solver.Add(variable == solver.Sum(
             [tweet_variables[i] for i in old_clusters.get(cluster)]))
         old_cluster_bool_variables.append(variable)
@@ -85,30 +90,49 @@ def process_tweets(tweets):
         constraint = solver.Constraint(0, 3)
         constraint.SetCoefficient(var, 1)
 
+    DEBUG_L = [5, 8, 9, 10, 11, 12, 93, 98]
     # No two tweets with less than one hour interval
     for tweet_id in range(len(tweets)):
         t1 = time_of_tweet(tweets[tweet_id][0])
         for tweet_id2 in range(len(tweets)):
-            if tweet_id == tweet_id2:
+            if tweet_id >= tweet_id2:
                 continue
             t2 = time_of_tweet(tweets[tweet_id2][0])
             if abs((t1 - t2).total_seconds()) > 600:
                 continue
-            contraint = solver.Constraint(0, 1)
-            constraint.SetCoefficient(tweet_variables[tweet_id], 1)
-            constraint.SetCoefficient(tweet_variables[tweet_id2], 1)
+            solver.Add(tweet_variables[tweet_id] == 0 or tweet_variables[tweet_id2] == 0)
 
     objective = solver.Objective()
+    coefficients = []
     for tweet_id in range(len(tweets)):
-        objective.SetCoefficient(tweet_variables[tweet_id], tweets[tweet_id][0]["retweet_count"])
+        coefficient = float(tweets[tweet_id][0]["retweet_count"])
+        if tweets[tweet_id][2] < 0:
+            coefficient /= 2.0
+        if tweets[tweet_id][3] < 0:
+            coefficient /= 2.0
+        else:
+            coefficient *= len(old_clusters.get(tweets[tweet_id][3]))
+        coefficients.append(coefficient)
+        objective.SetCoefficient(tweet_variables[tweet_id], coefficient)
     objective.SetMaximization()
 
     status = solver.Solve()
 
     for i in range(len(tweets)):
+        logger.debug("%s@%s new %d, old %d, selection %d, coeff %f",
+                tweets[i][0]['text'],
+                tweets[i][0]['created_at'],
+                tweets[i][2],
+                tweets[i][3],
+                int(tweet_variables[i].solution_value()),
+                coefficients[i])
+
         if tweet_variables[i].solution_value() > 0.5:
             yield tweets[i][0]
     
+logging.config.fileConfig('data/logging.conf')
+logger = logging.getLogger('selection')
+
 parser = argparse.ArgumentParser(description="Selects tweets")
 parser.add_argument("--input", default="data/clusters.json", help="JSON clusters")
 parser.add_argument("--output", default="data/output.json", help="Selected tweets")

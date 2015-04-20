@@ -27,7 +27,6 @@ for x, y in bigrams.keys():
     if x == y:
         unigram.add(x)
 
-print("Counts computed")
 unigram = sorted(unigram)
 unigram_positions = {unigram[x]: x for x in range(len(unigram))}
 
@@ -41,13 +40,11 @@ for x, y in bigrams.keys():
     y_index = unigram_positions[y]
     observation_vector[(x_index, y_index)] = float(bigrams[(x, y)])/float(bigrams[(x, x)] + bigrams[(y, y)] - bigrams[(x, y)])
 
-print "Writing unigrams.csv"
 with open("data/unigrams.csv", "w") as f:
     f.write("word,id,count,probability\n")
     for word in unigram:
         f.write("%s,%d,%d,%f\n" % (word, unigram_positions[word], bigrams[(word, word)], bigrams[(word, word)]/float(tweets)))
 
-print "Writing bigrams.csv"
 with open("data/bigrams.csv", "w") as f:
     f.write("word1,word2,distance\n")
     for bigram, value in observation_vector.items():

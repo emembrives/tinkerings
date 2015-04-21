@@ -18,9 +18,10 @@ def publish_tweet(tweet):
     tweet_id = tweet["id_str"]
     original_status = tweet["text"]
     screen_name = tweet["user"]["screen_name"]
-    new_status = "RT @%s: %s" % (screen_name, original_status)
-    if len(new_status) > 140:
-        new_status = new_status[:139] + u"\u2026"
+    max_length = 140 - len(screen_name) - 1
+    new_status = "RT: %s" % original_status
+    if len(new_status) > max_length:
+        new_status = new_status[:max_length - 1] + u"\u2026"
     new_status = new_status.encode("utf-8")
     cmd = ["t", "reply", "-P", "data/.trc", tweet_id, new_status]
     subprocess.call(cmd)

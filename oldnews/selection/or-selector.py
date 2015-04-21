@@ -69,28 +69,32 @@ def process_tweets(tweets):
         variable = solver.IntVar(0, len(new_clusters.get(cluster)), "nc%d" % cluster)
         solver.Add(variable == solver.Sum([tweet_variables[i] for i in new_clusters.get(cluster)]))
         new_cluster_count_variables.append(variable)
-  
+ 
+    constraints = []
     # We want between 5 and 10 tweets
     constraint1 = solver.Constraint(5, 10)
     for variable in tweet_variables:
       constraint1.SetCoefficient(variable, 1)
+    constraints.append(constraint1)
 
     # We want at least 5 old topics
     constraint2 = solver.Constraint(5, solver.infinity())
     for var in old_cluster_bool_variables:
         constraint2.SetCoefficient(var, 1)
+    constraints.append(constraint2)
         
     # We don't want more than 3 tweet per topic
     for var in old_cluster_count_variables:
         constraint = solver.Constraint(0, 3)
         constraint.SetCoefficient(var, 1)
+        constraints.append(constraint)
 
     # We don't want more than 3 tweet per new topic
     for var in new_cluster_count_variables:
         constraint = solver.Constraint(0, 3)
         constraint.SetCoefficient(var, 1)
+        constraints.append(constraint)
 
-    DEBUG_L = [5, 8, 9, 10, 11, 12, 93, 98]
     # No two tweets with less than one hour interval
     for tweet_id in range(len(tweets)):
         t1 = time_of_tweet(tweets[tweet_id][0])
@@ -100,12 +104,15 @@ def process_tweets(tweets):
             t2 = time_of_tweet(tweets[tweet_id2][0])
             if abs((t1 - t2).total_seconds()) > 600:
                 continue
-            solver.Add(tweet_variables[tweet_id] == 0 or tweet_variables[tweet_id2] == 0)
+            constraint = solver.Constraint(0, 1)
+            constraint.SetCoefficient(tweet_variables[tweet_id], 1)
+            constraint.SetCoefficient(tweet_variables[tweet_id2], 1)
+            constraints.append(constraint)
 
     objective = solver.Objective()
     coefficients = []
     for tweet_id in range(len(tweets)):
-        coefficient = float(tweets[tweet_id][0]["retweet_count"])
+        coefficient = max(float(tweets[tweet_id][0]["retweet_count"]), 0.1)
         if tweets[tweet_id][2] < 0:
             coefficient /= 2.0
         if tweets[tweet_id][3] < 0:

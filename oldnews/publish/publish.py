@@ -18,10 +18,10 @@ def publish_tweet(tweet):
     tweet_id = tweet["id_str"]
     original_status = tweet["text"]
     screen_name = tweet["user"]["screen_name"]
-    max_length = 140 - len(screen_name) - 1
+    max_length = 140 - len(screen_name) - 2
     new_status = "RT: %s" % original_status
     if len(new_status) > max_length:
-        new_status = new_status[:max_length - 1] + u"\u2026"
+        new_status = new_status[:(max_length - 1)] + u"\u2026"
     new_status = new_status.encode("utf-8")
     cmd = ["t", "reply", "-P", "data/.trc", tweet_id, new_status]
     subprocess.call(cmd)
@@ -39,8 +39,7 @@ scheduler = sched.scheduler(time.time, time.sleep)
 
 for tweet in tweets:
     tweet_datetime_utc = datetime.datetime.strptime(tweet['created_at'], TWITTER_DATEFORMAT)
-    tweet_time = tweet_datetime_utc.time()
-    retweet_datetime = datetime.datetime.combine(now.date(), tweet_time)
+    retweet_datetime = tweet_datetime_utc.replace(year=tweet_datetime_utc.date().year + 1)
     if retweet_datetime < now:
         continue
     scheduler.enterabs(calendar.timegm(retweet_datetime.timetuple()), 1, publish_tweet, [tweet])

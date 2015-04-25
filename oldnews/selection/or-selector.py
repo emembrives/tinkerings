@@ -37,7 +37,7 @@ def time_of_tweet(tweet):
     return tweet_date
 
 
-def process_tweets(tweets):
+def process_tweets(tweets, restrict_new_topics = True):
     solver = pywraplp.Solver('SolveTweetSelection',
             pywraplp.Solver.GLOP_LINEAR_PROGRAMMING)
 
@@ -90,10 +90,11 @@ def process_tweets(tweets):
         constraints.append(constraint)
 
     # We don't want more than 3 tweet per new topic
-    for var in new_cluster_count_variables:
-        constraint = solver.Constraint(0, 3)
-        constraint.SetCoefficient(var, 1)
-        constraints.append(constraint)
+    if restrict_new_topics:
+        for var in new_cluster_count_variables:
+            constraint = solver.Constraint(0, 3)
+            constraint.SetCoefficient(var, 1)
+            constraints.append(constraint)
 
     # No two tweets with less than one hour interval
     for tweet_id in range(len(tweets)):
@@ -148,7 +149,10 @@ args = parser.parse_args()
 with open(args.input) as f:
     tweets = json.load(f)
 
-selected_tweets = process_tweets(tweets)
+selected_tweets = list(process_tweets(tweets))
+if len(selected_tweets) == 0:
+    logger.info("Strict selection failed")
+    selected_tweets = process_tweets(tweets, False)
 
 with open(args.output, "w") as f:
     for tweet in selected_tweets:

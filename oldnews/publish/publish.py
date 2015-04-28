@@ -19,7 +19,7 @@ def publish_tweet(tweet):
     original_status = tweet["text"]
     screen_name = tweet["user"]["screen_name"]
     max_length = 140 - len(screen_name) - 2
-    new_status = "RT: %s" % original_status
+    new_status = original_status
     if len(new_status) > max_length:
         new_status = new_status[:(max_length - 1)] + u"\u2026"
     new_status = new_status.encode("utf-8")

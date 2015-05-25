@@ -121,7 +121,7 @@ func main() {
         Key: []string{"state", "lastupdate", "elevator"},
         Unique: true,
         DropDups: true,
-        Background: true, // See notes.
+        Background: true,
         Sparse: true,
     }
     err = c.EnsureIndex(index)

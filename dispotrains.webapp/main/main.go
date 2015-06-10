@@ -117,18 +117,17 @@ func main() {
 	}
 
 	c = session.DB("dispotrains").C("statuses")
-    index := mgo.Index{
-        Key: []string{"state", "lastupdate", "elevator"},
-        Unique: true,
-        DropDups: true,
-        Background: true,
-        Sparse: true,
-    }
-    err = c.EnsureIndex(index)
+	index := mgo.Index{
+		Key:        []string{"state", "lastupdate", "elevator"},
+		Unique:     true,
+		DropDups:   true,
+		Background: true,
+		Sparse:     true,
+	}
+	err = c.EnsureIndex(index)
 	if err != nil {
 		panic(err)
 	}
-    var statuses []bson.M
 	for _, station := range stations {
 		for _, elevator := range station.GetElevators() {
 			bsonStatus := bson.M{
@@ -136,12 +135,11 @@ func main() {
 				"lastupdate": elevator.Status.LastUpdate,
 				"elevator":   elevator.ID,
 			}
-            statuses = append(statuses, bsonStatus)
+			err = c.Insert(bsonStatus)
+			if err != nil && !mgo.IsDup(err) {
+				panic(err)
+			}
 		}
-	}
-    err = c.Insert(statuses)
-	if err != nil {
-		panic(err)
 	}
 }
 

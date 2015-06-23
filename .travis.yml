@@ -3,3 +3,9 @@ language: go
 go:
     - 1.4
     - tip
+
+install:
+    - apt-get install libleveldb1 libleveldb-dev
+    - go get ./...
+
+

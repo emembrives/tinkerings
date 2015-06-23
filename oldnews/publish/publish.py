@@ -8,18 +8,22 @@ import datetime
 import json
 import sched
 import subprocess
+import HTMLParser
 
 parser = argparse.ArgumentParser(description="Selects tweets")
 parser.add_argument("--tweets", default="data/output.json", help="Tweets to publish")
 
 args = parser.parse_args()
+html_parser = HTMLParser.HTMLParser()
+
+PREFIX = u"#Ilya1an "
 
 def publish_tweet(tweet):
     tweet_id = tweet["id_str"]
     original_status = tweet["text"]
     screen_name = tweet["user"]["screen_name"]
     max_length = 140 - len(screen_name) - 2
-    new_status = original_status
+    new_status = PREFIX + html_parser.unescape(original_status)
     if len(new_status) > max_length:
         new_status = new_status[:(max_length - 1)] + u"\u2026"
     new_status = new_status.encode("utf-8")

@@ -24,6 +24,6 @@ before_install:
 addons:
   apt:
     packages:
-      - libzmq3-dev
+      - libsodium-dev
       - pkg-config
 

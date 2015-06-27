@@ -3,7 +3,13 @@ language: go
 go:
     - 1.4
 
-sudo: true
+before_script:
+  - git clone https://github.com/google/leveldb
+  - cd leveldb && make && cd ..
+  - export PATH=$PATH:$PWD/leveldb
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/leveldb
+  - export LIBRARY_PATH=$LIBRARY_PATH:$PWD/leveldb
+  - export CPATH=$CPATH:$PWD/leveldb/include
 
 addons:
   apt:

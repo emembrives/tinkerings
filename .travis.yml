@@ -12,7 +12,7 @@ before_install:
   - export LIBRARY_PATH=$LIBRARY_PATH:$PWD/leveldb
   - export CPATH=$CPATH:$PWD/leveldb/include
 # ZeroMQ
-  - wget http://download.zeromq.org/zeromq-4.1.2.tar.gz /tmp/zeromq-4.1.2.tar.gz
+  - wget http://download.zeromq.org/zeromq-4.1.2.tar.gz -O /tmp/zeromq-4.1.2.tar.gz
   - tar -xvf /tmp/zeromq-4.1.2.tar.gz
   - mkdir /tmp/zeromq
   - cd zeromq-4.1.2 && ./configure --prefix=/tmp/zeromq --exec-prefix=/tmp/zeromq && make && make install && cd ..

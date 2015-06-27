@@ -3,7 +3,7 @@ language: go
 go:
     - 1.4
 
-before_script:
+before_install:
   - git clone https://github.com/google/leveldb
   - cd leveldb && make && cd ..
   - export PATH=$PATH:$PWD/leveldb

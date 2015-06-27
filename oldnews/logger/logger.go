@@ -11,6 +11,11 @@ import (
 )
 
 var (
+	CONSUMER_KEY        string
+	CONSUMER_SECRET     string
+	ACCESS_TOKEN        string
+	ACCESS_TOKEN_SECRET string
+
 	databasePath                = flag.String("database-path", "tweets.db", "Path to database directory")
 	newsTwitterHandles []string = []string{
 		"lemondefr",

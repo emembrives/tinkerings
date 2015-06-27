@@ -24,5 +24,6 @@ before_install:
 addons:
   apt:
     packages:
+      - libzmq3-dev
       - pkg-config
 

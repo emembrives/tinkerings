@@ -18,10 +18,11 @@
                     <h2>Ascenseurs</h3>
                     <div class="data">
                         <ul data-role="listview" data-inset=false data-filter=false>
+                            {{ $name := .Name }}
                             {{ range .Elevators }}
                             <li {{if not (eq .Status.State "Disponible")}}data-icon="alert" data-theme="b" class="ui-custom-alert"{{end}}>
-                            <h3 style="white-space: normal">{{.Situation}}</h3>
-                            <p>{{.Direction}} - Situation du <strong>{{.LocalStatusDate}}</strong></p>
+                                <h3 style="white-space: normal"><a href="/gare/{{$name}}/stats">{{.Situation}}</a></h3>
+                                <p>{{.Direction}} ({{.ID}}) - <strong>{{.LocalStatusDate}}</strong></p>
                             <p class="ui-li-aside">{{.Status.State}}</p>
                             </li>
                             {{end}}

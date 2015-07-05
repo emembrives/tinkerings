@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"sort"
+	"time"
 
 	"github.com/emembrives/tinkerings/dispotrains.webapp/storage"
 
@@ -15,9 +17,10 @@ import (
 )
 
 var (
-	homeTmpl    = template.Must(template.ParseFiles("templates/lines.html", "templates/footer.html", "templates/header.html"))
-	lineTmpl    = template.Must(template.ParseFiles("templates/line.html", "templates/footer.html", "templates/header.html"))
-	stationTmpl = template.Must(template.ParseFiles("templates/station.html", "templates/footer.html", "templates/header.html"))
+	homeTmpl         = template.Must(template.ParseFiles("templates/lines.html", "templates/footer.html", "templates/header.html"))
+	lineTmpl         = template.Must(template.ParseFiles("templates/line.html", "templates/footer.html", "templates/header.html"))
+	stationTmpl      = template.Must(template.ParseFiles("templates/station.html", "templates/footer.html", "templates/header.html"))
+	stationStatsTmpl = template.Must(template.ParseFiles("templates/stats.html", "templates/footer.html", "templates/header.html"))
 )
 
 type Line struct {
@@ -34,9 +37,15 @@ type LineHolder struct {
 type LineSlice []LineHolder
 
 type DisplayStation struct {
-	storage.Station
+	Name        string
 	DisplayName string
 	Elevators   []*LocElevator
+}
+
+type DataStatus struct {
+	Elevator   string
+	State      string
+	Lastupdate time.Time
 }
 
 type LocElevator storage.Elevator
@@ -101,6 +110,73 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func StatsHandler(w http.ResponseWriter, req *http.Request) {
+	session, err := mgo.Dial("localhost")
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+	c_stations := session.DB("dispotrains").C("stations")
+	c_statuses := session.DB("dispotrains").C("statuses")
+
+	vars := mux.Vars(req)
+	stationName := vars["station"]
+
+	var station DisplayStation
+	c_stations.Find(bson.M{"name": stationName}).One(&station)
+	elevatorIds := make([]string, 0)
+	for _, stationElevator := range station.Elevators {
+		elevatorIds = append(elevatorIds, stationElevator.ID)
+	}
+	var dbStatuses []DataStatus
+
+	index := mgo.Index{
+		Key: []string{"elevator"},
+	}
+	err = c_stations.EnsureIndex(index)
+	if err != nil {
+		panic(err)
+	}
+	c_statuses.Find(bson.M{"elevator": bson.M{"$in": elevatorIds}}).
+		Sort("lastupdate").
+		All(&dbStatuses)
+
+	events, reports := statusesToEvents(dbStatuses)
+
+	templateData := struct {
+		Station   DisplayStation
+		Events    map[string][]string
+		Reports   []string
+		StartDate string
+		EndDate   string
+	}{station, events, reports, reports[0], reports[len(reports)-1]}
+	if err = stationStatsTmpl.Execute(w, templateData); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func statusesToEvents(dbStatuses []DataStatus) (map[string][]string, []string) {
+	events := make(map[string][]string)
+	reportSet := make(map[string]bool)
+	for _, status := range dbStatuses {
+		dateStr := status.Lastupdate.Format(time.RFC3339)
+		reportSet[dateStr] = true
+		if _, ok := events[status.Elevator]; !ok {
+			events[status.Elevator] = make([]string, 0)
+		}
+		if status.State != "Disponible" {
+			events[status.Elevator] = append(events[status.Elevator], dateStr)
+		}
+	}
+
+	reports := make(sort.StringSlice, 0, len(reportSet))
+	for key, _ := range reportSet {
+		reports = append(reports, key)
+	}
+	reports.Sort()
+	return events, reports
+}
+
 func AppHandler(w http.ResponseWriter, req *http.Request) {
 	session, err := mgo.Dial("localhost")
 	if err != nil {
@@ -132,6 +208,7 @@ func main() {
 	r.HandleFunc("/", HomeHandler)
 	r.HandleFunc("/ligne/{line}", LineHandler)
 	r.HandleFunc("/gare/{station}", StationHandler)
+	r.HandleFunc("/gare/{station}/stats", StatsHandler)
 	r.HandleFunc("/app/GetStations/", AppHandler)
 	r.PathPrefix("/static/").Handler(CacheRequest(http.StripPrefix("/static/", http.FileServer(http.Dir("static")))))
 	http.Handle("/", r)

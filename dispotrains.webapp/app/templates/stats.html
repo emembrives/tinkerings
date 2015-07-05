@@ -1,0 +1,78 @@
+<html lang="fr">
+    <head>
+        <title>Statistiques pou {{ .Station.DisplayName }} - Dispotrains</title>
+    {{template "header.html"}}
+		<meta name="description" content="État des équipements d'accessibilité aux usagers à mobilité réduite à {{ .Station.DisplayName }} mis-à-jour en temps-réel"/>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
+        <script type="text/javascript" src="/static/eventDrops.js"></script>
+        <link rel="stylesheet" href="/static/css/style.css">
+    </head>
+    <body id="app">
+    <div id="station" data-role="page" data-add-back-btn="true">
+        <div data-role="header" data-position="fixed">
+            <a href="/" data-role="button" data-icon-post="notext" title="Accueil"><i class="fa fa-home"></i></a>
+            <h1>Statistiques pour {{ .Station.DisplayName }} - Dispotrains</h1>
+            <a href="#help" data-rel="dialog" data-transition="pop" title="A propos"><i class="fa fa-info-circle"></i></a>
+        </div>
+        <div data-role="content">
+            <div id="chart_placeholder"></div>
+            <div style="text-align: center" id="legend"></div>
+            <div style="text-align: center" id="zoomEnd"></div>
+            <script>
+var chartPlaceholder = document.getElementById('chart_placeholder');
+var data = []
+{{ range $ID, $dates := .Events }}
+data.push({"name": "{{ $ID }}", "dates": [{{ range $dates }}new Date("{{.}}"), {{ end }}]});
+{{ end }}
+data.push({"name": "Relevés", "dates": [{{ range .Reports }}new Date("{{.}}"), {{ end }}]});
+
+var color = d3.scale.category20();
+var locale = d3.locale({
+    "decimal": ",",
+    "thousands": " ",
+    "grouping": [3],
+    "dateTime": "%A %e %B %Y, %X",
+    "date": "%d/%m/%Y",
+    "time": "%H:%M:%S",
+    "periods": ["AM", "PM"],
+    "days": ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"],
+    "shortDays": ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."],
+    "months": ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"],
+    "shortMonths": ["janv.", "févr.", "mars", "avril", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
+});
+
+var graph = d3.chart.eventDrops()
+    .start(new Date("{{.StartDate}}"))
+    .end(new Date("{{.EndDate}}"))
+    .minScale(0.5)
+    .maxScale(100)
+    .locale(locale)
+    .eventColor(function (datum, index) {
+        return 'blue';
+    })
+    .width(800)
+    .margin({ top: 100, left: 200, bottom: 0, right: 0 })
+//    .axisFormat(function(xAxis) {
+//        xAxis.ticks(5);
+//    })
+    .eventHover(function(el) {
+        var series = el.parentNode.firstChild.innerHTML;
+        var timestamp = d3.select(el).data()[0];
+        document.getElementById('legend').innerHTML = 'Hovering [' + timestamp + '] in series "' + series + '"';
+})
+    .eventZoom(function (scale) {
+        var limit = scale.domain();
+        var period = parseInt((limit[1] - limit[0]) / (24 * 60 * 60 * 1000) );
+        document.getElementById('zoomEnd').innerHTML = 'Zoomed on a period of "' + period + ' days"';
+    });
+var element = d3.select(chartPlaceholder).append('div').datum(data);
+graph(element);
+            </script>
+        </div>
+        <div data-role="footer" data-position="fixed">
+            <h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
+        </div>
+    </div>
+    {{template "footer.html"}}
+    </body>
+</html>

@@ -3,9 +3,6 @@
         <title>Statistiques pou {{ .Station.DisplayName }} - Dispotrains</title>
     {{template "header.html"}}
 		<meta name="description" content="État des équipements d'accessibilité aux usagers à mobilité réduite à {{ .Station.DisplayName }} mis-à-jour en temps-réel"/>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js" charset="utf-8"></script>
-        <script type="text/javascript" src="/static/eventDrops.js"></script>
-        <link rel="stylesheet" href="/static/css/style.css">
     </head>
     <body id="app">
     <div id="station" data-role="page" data-add-back-btn="true">
@@ -15,10 +12,23 @@
             <a href="#help" data-rel="dialog" data-transition="pop" title="A propos"><i class="fa fa-info-circle"></i></a>
         </div>
         <div data-role="content">
-            <div id="chart_placeholder"></div>
-            <div style="text-align: center" id="legend"></div>
+            <div style="text-align: center">
+                <input id="btn-week" type="button" data-inline="true" value="7 jours">
+                <input id="btn-month" type="button" data-inline="true" value="30 jours">
+                <input id="btn-year" type="button" data-inline="true" value="1 an">
+                <input id="btn-total" type="button" data-inline="true" value="Total">
+            </div>
             <div style="text-align: center" id="zoomEnd"></div>
-            <script>
+            <div style="text-align: center" id="chart_placeholder"></div>
+        </div>
+        <div data-role="footer" data-position="fixed">
+            <h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
+        </div>
+    </div>
+    {{template "footer.html"}}
+    </body>
+    <script>
+$(document).ready(function() {
 var chartPlaceholder = document.getElementById('chart_placeholder');
 var data = []
 {{ range $ID, $dates := .Events }}
@@ -31,7 +41,7 @@ var locale = d3.locale({
     "decimal": ",",
     "thousands": " ",
     "grouping": [3],
-    "dateTime": "%A %e %B %Y, %X",
+    "dateTime": "%x, %X",
     "date": "%d/%m/%Y",
     "time": "%H:%M:%S",
     "periods": ["AM", "PM"],
@@ -41,38 +51,80 @@ var locale = d3.locale({
     "shortMonths": ["janv.", "févr.", "mars", "avril", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."]
 });
 
+function formatDate(date) {
+    return '' + date.getDate() + "/" + (date.getMonth() + 1) + "/" + date.getFullYear();
+}
+
+function addDays(date, days) {
+    var result = new Date(date);
+    result.setDate(date.getDate() + days);
+    return result;
+}
+
+var startDataDate = new Date("{{.StartDate}}");
+var endDataDate = new Date("{{.EndDate}}");
+
 var graph = d3.chart.eventDrops()
-    .start(new Date("{{.StartDate}}"))
-    .end(new Date("{{.EndDate}}"))
+    .start(startDataDate)
+    .end(endDataDate)
     .minScale(0.5)
     .maxScale(100)
     .locale(locale)
+    .hasDelimiter(false)
+    .hasBottomAxis(false)
     .eventColor(function (datum, index) {
         return 'blue';
     })
-    .width(800)
-    .margin({ top: 100, left: 200, bottom: 0, right: 0 })
+    .width($(chartPlaceholder).width() - 50)
+    .margin({ top: 80, left: 200, bottom: 40, right: 50 })
 //    .axisFormat(function(xAxis) {
 //        xAxis.ticks(5);
 //    })
-    .eventHover(function(el) {
-        var series = el.parentNode.firstChild.innerHTML;
-        var timestamp = d3.select(el).data()[0];
-        document.getElementById('legend').innerHTML = 'Hovering [' + timestamp + '] in series "' + series + '"';
-})
+//    .eventHover(function(el) {
+//        var series = el.parentNode.firstChild.innerHTML;
+//        var timestamp = d3.select(el).data()[0];
+//       document.getElementById('legend').innerHTML = 'Hovering [' + timestamp + '] in series "' + series + '"';
+//})
     .eventZoom(function (scale) {
         var limit = scale.domain();
-        var period = parseInt((limit[1] - limit[0]) / (24 * 60 * 60 * 1000) );
-        document.getElementById('zoomEnd').innerHTML = 'Zoomed on a period of "' + period + ' days"';
+        var begin = new Date(limit[0]);
+        var end = new Date(limit[1]);
+        document.getElementById('zoomEnd').innerHTML = 'Du ' + formatDate(begin) + ' au ' + formatDate(end);
+        if (begin < startDataDate) {
+            graph.start(startDataDate);
+            graph(element);
+        }
+        if (end > endDataDate) {
+            graph.end(endDataDate);
+            graph(element);
+        }
     });
 var element = d3.select(chartPlaceholder).append('div').datum(data);
 graph(element);
+
+$("#btn-week").click(function() {
+    graph.end(endDataDate);
+    graph.start(addDays(endDataDate, -7));
+    graph(element);
+});
+
+$("#btn-month").click(function() {
+    graph.end(endDataDate);
+    graph.start(addDays(endDataDate, -30));
+    graph(element);
+});
+
+$("#btn-year").click(function() {
+    graph.end(endDataDate);
+    graph.start(addDays(endDataDate, -365));
+    graph(element);
+});
+
+$("#btn-total").click(function() {
+    graph.end(endDataDate);
+    graph.start(startDataDate);
+    graph(element);
+});
+});
             </script>
-        </div>
-        <div data-role="footer" data-position="fixed">
-            <h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
-        </div>
-    </div>
-    {{template "footer.html"}}
-    </body>
 </html>

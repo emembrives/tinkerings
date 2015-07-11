@@ -1,3 +1,32 @@
 html body .ui-btn.ui-btn-b.ui-custom-alert, html body .ui-body-b.ui-custom-alert {
   background-color: #FFD060;   
 }
+
+body {
+    font-family: Roboto, Noto, sans-serif;
+}
+
+div.list paper-item {
+    background: white;
+    overflow: hidden;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+div.list paper-item-body {
+    width: 100%;
+}
+
+div.list a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.item-ripple:hover {
+    background: #f5f5f5;
+    transition: 0.3s;
+}
+
+.item-ripple:active {
+    background: #e0e0e0;
+    transition: 0.5s;
+}

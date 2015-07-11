@@ -7,15 +7,22 @@
     <body class="fullbleed vertical layout" >
         <paper-header-panel class="flex orange">
             <paper-toolbar id="mainheader">
-                <paper-icon-button id="about" icon="info-outline"></paper-icon-button>
+                <paper-icon-button id="about" icon="info-outline" onclick="document.getElementById('about-dialog').open()"></paper-icon-button>
                 <span flex>DispoTrains: Lignes accessibles</span>
             </paper-toolbar>
-            <div>
+            <div class="list">
                 {{range .}}
-                <paper-item><a href="/ligne/{{.ID}}"><paper-button class="flex">{{ .Network }} {{ .ID }}</paper-button></a></paper-item>
+                <a href="/ligne/{{.ID}}">
+                    <paper-item class="item-ripple">
+                        <paper-item-body>
+                            {{ .Network }} {{ .ID }}
+                        </paper-item-body>
+                        <iron-icon icon="hardware:keyboard-arrow-right"></iron-icon>
+                    </paper-item>
+                </a>
                 {{end}}
             </div>
-            <div data-role="footer" data-position="fixed"><h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4></div>
         </paper-header-panel>
+        {{template "footer.html"}}
     </body>
 </html>

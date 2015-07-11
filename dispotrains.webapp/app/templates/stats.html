@@ -5,7 +5,7 @@
 		<meta name="description" content="État des équipements d'accessibilité aux usagers à mobilité réduite à {{ .Station.DisplayName }} mis-à-jour en temps-réel"/>
     </head>
     <body id="app">
-    <div id="station" data-role="page" data-add-back-btn="true">
+    <div id="statistics" data-role="page" data-add-back-btn="true">
         <div data-role="header" data-position="fixed">
             <a href="/" data-role="button" data-icon-post="notext" title="Accueil"><i class="fa fa-home"></i></a>
             <h1>Statistiques pour {{ .Station.DisplayName }} - Dispotrains</h1>
@@ -20,16 +20,13 @@
             </div>
             <div style="text-align: center" id="zoomEnd"></div>
             <div style="text-align: center" id="chart_placeholder"></div>
-        </div>
-        <div data-role="footer" data-position="fixed">
-            <h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
-        </div>
-    </div>
-    {{template "footer.html"}}
-    </body>
     <script>
-$(document).ready(function() {
-var chartPlaceholder = document.getElementById('chart_placeholder');
+$(document).on("pagecontainershow", function(event) {
+var currentPage = $(':mobile-pagecontainer').pagecontainer('getActivePage');
+var chartPlaceholder = currentPage.find('#chart_placeholder');
+if (chartPlaceholder.length === 0) {
+    return;
+}
 var data = []
 {{ range $ID, $dates := .Events }}
 data.push({"name": "{{ $ID }}", "dates": [{{ range $dates }}new Date("{{.}}"), {{ end }}]});
@@ -72,10 +69,17 @@ var graph = d3.chart.eventDrops()
     .locale(locale)
     .hasDelimiter(false)
     .hasBottomAxis(false)
-    .eventColor(function (datum, index) {
-        return 'blue';
+    .eventLineColor(function (datum, index) {
+        if (datum.name === "Relevés") {
+            return 'blue';
+        } else {
+            return 'red';   
+        }
     })
-    .width($(chartPlaceholder).width() - 50)
+//    .eventColor(function (datum, index) {
+//        return 'blue';
+//    })
+    .width(chartPlaceholder.width() - 50)
     .margin({ top: 80, left: 200, bottom: 40, right: 50 })
 //    .axisFormat(function(xAxis) {
 //        xAxis.ticks(5);
@@ -98,8 +102,12 @@ var graph = d3.chart.eventDrops()
             graph.end(endDataDate);
             graph(element);
         }
+        var timeSpan = (end - begin) / (1000 * 3600 * 24);
+        var opacity = Math.min(1, Math.max(0.1, (2913.0-7*timeSpan)/3580.0));
+        var circleWidth = Math.min(2, Math.max(0.4, (1818-4*timeSpan)/895.0));
+        $.stylesheet(".graph-body .line circle").css('opacity', opacity).css('transform', 'scale(' + circleWidth + ', 1)');
     });
-var element = d3.select(chartPlaceholder).append('div').datum(data);
+var element = d3.select(chartPlaceholder[0]).append('div').datum(data);
 graph(element);
 
 $("#btn-week").click(function() {
@@ -127,4 +135,11 @@ $("#btn-total").click(function() {
 });
 });
             </script>
+        </div>
+        <div data-role="footer" data-position="fixed">
+            <h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
+        </div>
+    </div>
+    {{template "footer.html"}}
+    </body>
 </html>

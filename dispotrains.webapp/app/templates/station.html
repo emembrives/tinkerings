@@ -21,7 +21,7 @@
                             {{ $name := .Name }}
                             {{ range .Elevators }}
                             <li {{if not (eq .Status.State "Disponible")}}data-icon="alert" data-theme="b" class="ui-custom-alert"{{end}}>
-                                <h3 style="white-space: normal"><a href="/gare/{{$name}}/stats">{{.Situation}}</a></h3>
+                                <h3 style="white-space: normal">{{.Situation}}</h3>
                                 <p>{{.Direction}} ({{.ID}}) - <strong>{{.LocalStatusDate}}</strong></p>
                             <p class="ui-li-aside">{{.Status.State}}</p>
                             </li>
@@ -32,6 +32,7 @@
         </div>
         <div data-role="footer" data-position="fixed">
     		<h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4>
+            <h4><a href="/gare/{{$name}}/stats" data-role="button">Statistiques</a></h4>
 	    </div>
     </div>
     {{template "footer.html"}}

@@ -28,6 +28,6 @@
 
 .graph-body .line circle {
     opacity: 0.1;
-    
+    transform-origin: center;
 }
 

@@ -2,22 +2,20 @@
     <head>
     <title>Dispotrains - Accessibilité en Ile-de-France</title>
     {{template "header.html"}}
-		<meta name="description" content="Dispotrains: l'accessibilité temps-réel pour les usagers à mobilité réduite des transports d'Ile-de-France"/>
+    <meta name="description" content="Dispotrains: l'accessibilité temps-réel pour les usagers à mobilité réduite des transports d'Ile-de-France"/>
     </head>
-    <body id="app">
-    <div id="main" data-role="page">
-        <div data-role="header" data-position="fixed"><h1 style="white-space: normal">DispoTrains: Lignes accessibles</h1>
-            <a href="#help" data-rel="dialog" data-transition="pop" title="A propos"><i class="fa fa-info-circle"></i></a>
-        </div>
-        <div data-role="content">
-            <ul data-role="listview" data-inset=true data-filter=false>
+    <body class="fullbleed vertical layout" >
+        <paper-header-panel class="flex orange">
+            <paper-toolbar id="mainheader">
+                <paper-icon-button id="about" icon="info-outline"></paper-icon-button>
+                <span flex>DispoTrains: Lignes accessibles</span>
+            </paper-toolbar>
+            <div>
                 {{range .}}
-                    <li><a href="/ligne/{{.ID}}">{{ .Network }} {{ .ID }}</a></li>
+                <paper-item><a href="/ligne/{{.ID}}"><paper-button class="flex">{{ .Network }} {{ .ID }}</paper-button></a></paper-item>
                 {{end}}
-            </ul>
-        </div>
-        <div data-role="footer" data-position="fixed"><h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4></div>
-    </div>
-    {{template "footer.html"}}
+            </div>
+            <div data-role="footer" data-position="fixed"><h4><a href="#apropos" data-role="button" data-rel="dialog" data-transition="pop">À propos</a></h4></div>
+        </paper-header-panel>
     </body>
 </html>

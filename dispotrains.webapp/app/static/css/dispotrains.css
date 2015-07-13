@@ -6,6 +6,11 @@ body {
     font-family: Roboto, Noto, sans-serif;
 }
 
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
 div.list paper-item {
     background: white;
     overflow: hidden;
@@ -16,11 +21,6 @@ div.list paper-item-body {
     width: 100%;
 }
 
-div.list a {
-    text-decoration: none;
-    color: inherit;
-}
-
 .item-ripple:hover {
     background: #f5f5f5;
     transition: 0.3s;
@@ -29,4 +29,22 @@ div.list a {
 .item-ripple:active {
     background: #e0e0e0;
     transition: 0.5s;
+}
+
+.card {
+    margin: 16px;
+}
+
+.card h2 {
+    padding: 16px;
+    margin: 0px;
+}
+
+.problem {
+    background-color: #ffc107;
+}
+
+.ok {
+    color: white;
+    background-color: #03a9f4;
 }

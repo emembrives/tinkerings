@@ -4,6 +4,7 @@ html body .ui-btn.ui-btn-b.ui-custom-alert, html body .ui-body-b.ui-custom-alert
 
 body {
     font-family: Roboto, Noto, sans-serif;
+    color: #212121;
 }
 
 a {
@@ -12,7 +13,11 @@ a {
 }
 
 div.list paper-item {
-    background: white;
+    overflow: hidden;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+div.list paper-icon-item {
     overflow: hidden;
     border-bottom: 1px solid #e5e5e5;
 }
@@ -41,10 +46,14 @@ div.list paper-item-body {
 }
 
 .problem {
-    background-color: #ffc107;
+    background-color: #ffeb3b;
 }
 
 .ok {
     color: white;
     background-color: #03a9f4;
+}
+
+.elevator-status {
+    float: right;
 }

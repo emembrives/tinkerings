@@ -110,6 +110,24 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+type StationStats struct {
+	Reports         int
+	ReportDays      int
+	Malfunctions    int
+	MalfunctionDays int
+	FunctionDays    int
+	PercentFunction float64
+	Elevators       map[string]ElevatorStats
+}
+
+type ElevatorStats struct {
+	Name            string
+	Malfunctions    int
+	MalfunctionDays int
+	FunctionDays    int
+	PercentFunction float64
+}
+
 func StatsHandler(w http.ResponseWriter, req *http.Request) {
 	session, err := mgo.Dial("localhost")
 	if err != nil {
@@ -142,6 +160,7 @@ func StatsHandler(w http.ResponseWriter, req *http.Request) {
 		All(&dbStatuses)
 
 	events, reports := statusesToEvents(dbStatuses)
+	stats := statusesToStatistics(events, reports, dbStatuses)
 
 	templateData := struct {
 		Station   DisplayStation
@@ -149,7 +168,8 @@ func StatsHandler(w http.ResponseWriter, req *http.Request) {
 		Reports   []string
 		StartDate string
 		EndDate   string
-	}{station, events, reports, reports[0], reports[len(reports)-1]}
+		Stats     StationStats
+	}{station, events, reports, reports[0], reports[len(reports)-1], stats}
 	if err = stationStatsTmpl.Execute(w, templateData); err != nil {
 		log.Fatal(err)
 	}
@@ -175,6 +195,38 @@ func statusesToEvents(dbStatuses []DataStatus) (map[string][]string, []string) {
 	}
 	reports.Sort()
 	return events, reports
+}
+
+func statusesToStatistics(events map[string][]string, reports []string, dbStatuses []DataStatus) StationStats {
+	stats := StationStats{}
+	stats.Reports = len(reports)
+	reportDays := make(map[string]bool)
+	for _, date := range reports {
+		reportDays[date[0:10]] = true
+	}
+	stats.ReportDays = len(reportDays)
+	stats.Elevators = make(map[string]ElevatorStats)
+	malfunctionDays := make(map[string]bool)
+	for elevatorName, statusDates := range events {
+		elevatorStats := ElevatorStats{
+			Name:         elevatorName,
+			Malfunctions: len(statusDates),
+		}
+		stats.Malfunctions += len(statusDates)
+		malfunctionElevatorDays := make(map[string]bool)
+		for _, date := range statusDates {
+			malfunctionDays[date[0:10]] = true
+			malfunctionElevatorDays[date[0:10]] = true
+		}
+		elevatorStats.MalfunctionDays = len(malfunctionElevatorDays)
+		elevatorStats.FunctionDays = len(reportDays) - len(malfunctionElevatorDays)
+		elevatorStats.PercentFunction = float64(elevatorStats.FunctionDays) * 100 / float64(len(reportDays))
+		stats.Elevators[elevatorName] = elevatorStats
+	}
+	stats.MalfunctionDays = len(malfunctionDays)
+	stats.FunctionDays = len(reportDays) - len(malfunctionDays)
+	stats.PercentFunction = float64(stats.FunctionDays) * 100 / float64(len(reportDays))
+	return stats
 }
 
 func AppHandler(w http.ResponseWriter, req *http.Request) {

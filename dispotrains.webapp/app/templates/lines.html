@@ -7,8 +7,8 @@
     <body class="fullbleed vertical layout" >
         <paper-header-panel>
             <paper-toolbar id="mainheader">
-                <paper-icon-button id="about" icon="info-outline" onclick="document.getElementById('about-dialog').open()"></paper-icon-button>
-                <span flex><h1>DispoTrains: Lignes accessibles</h1></span>
+                <span class="header"><h1>DispoTrains: Lignes accessibles</h1></span>
+                <paper-icon-button id="about" icon="info-outline" onclick="document.getElementById('about-dialog').open()" alt="À propos"></paper-icon-button>
             </paper-toolbar>
             <div class="list">
                 {{range .}}

@@ -4,20 +4,20 @@
     {{template "header.html"}}
 		<meta name="description" content="État des équipements d'accessibilité aux usagers à mobilité réduite à {{ .DisplayName }} mis-à-jour en temps-réel"/>
     </head>
-
     <body class="fullbleed vertical layout" >
         <paper-header-panel>
             <paper-toolbar id="mainheader">
-                <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()"></paper-icon-button>
+                <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()" alt="Retour"></paper-icon-button>
                 <span class="header"><h1>{{ .DisplayName }} - Dispotrains</h1></span>
-                <a href="/gare/{{.Name}}/stats"><paper-icon-button id="stats" icon="assessment"></paper-icon-button></a>
+                <a href="/gare/{{.Name}}/stats"><paper-icon-button id="stats" icon="assessment" alt="Statistiques"></paper-icon-button></a>
+                <paper-icon-button id="about" icon="info-outline" onclick="document.getElementById('about-dialog').open()" alt="À propos"></paper-icon-button>
             </paper-toolbar>
             <div class="list">
                 {{ $name := .Name }}
                 {{ range .Elevators }}
                 {{if not (eq .Status.State "Disponible")}}
                     <paper-icon-item class="problem">
-                    <iron-icon icon="warning" item-icon></iron-icon>
+                    <iron-icon icon="warning" item-icon alt="Problème"></iron-icon>
                 {{else}}
                     <paper-icon-item>
                 {{end}}
@@ -35,5 +35,6 @@
                 {{end}}
             </div>
         </paper-header-panel>
+        {{template "footer.html"}}
     </body>
 </html>

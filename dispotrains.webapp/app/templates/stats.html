@@ -7,12 +7,18 @@
     <body class="fullbleed vertical layout" >
         <paper-header-panel>
             <paper-toolbar id="mainheader">
-                <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()"></paper-icon-button>
-                <span flex><h1>Statistiques pour {{ .Station.DisplayName }} - Dispotrains</h1></span>
+                <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()" alt="Retour"></paper-icon-button>
+                <span class="header"><h1>Statistiques pour {{ .Station.DisplayName }} - Dispotrains</h1></span>
+                <paper-icon-button id="about" icon="info-outline" onclick="document.getElementById('about-dialog').open()" alt="À propos"></paper-icon-button>
             </paper-toolbar>
             <div>
             <paper-material class="card" elevation="1">
                 <h2 class="ok">Données agregées</h2>
+                <dl>
+                    <dt>Pannes/Relevés</dt><dd>{{.Stats.Malfunctions}}/{{.Stats.Reports}}</dd>
+                    <dt>Jours de panne/Jours relevés</dt><dd>{{.Stats.MalfunctionDays}}/{{.Stats.ReportDays}}</dd>
+                    <dt>Taux de fonctionnement</dt><dd>{{.Stats.PercentFunction | printf "%.1f"}}%</dd>
+                </dl>
             </paper-material>
             <paper-material class="card" elevation="1">
                 <h2 class="ok">Pannes</h2>
@@ -29,8 +35,8 @@
             </paper-material>
             </div>
         </paper-header-panel>
+        {{template "footer.html"}}
     </body>
-
 <script>
 $(document).ready(function(event) {
 var chartPlaceholder = document.getElementById('chart_placeholder');

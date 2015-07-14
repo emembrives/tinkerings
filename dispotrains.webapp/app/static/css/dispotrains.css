@@ -67,7 +67,14 @@ div.list paper-item-body {
     margin-top: 16px;
 }
 
+.text a {
+    text-decoration: underline;
+}
 
+dl {
+    margin: 16px;
+    padding-bottom: 16px;
+}
 
 .zoom {
     fill: transparent;

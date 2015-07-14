@@ -7,8 +7,9 @@
     <body class="fullbleed vertical layout" >
         <paper-header-panel>
             <paper-toolbar id="mainheader">
-                <a href="/"><paper-icon-button id="back" icon="arrow-back"></paper-icon-button></a>
-                <span flex><h1>{{ .Network }} {{ .ID }} - Dispotrains</h1></span>
+                <a href="/"><paper-icon-button id="back" icon="arrow-back" alt="Retour"></paper-icon-button></a>
+                <span class="header"><h1>{{ .Network }} {{ .ID }} - Dispotrains</h1></span>
+                <paper-icon-button id="about" icon="info-outline" onclick="document.getElementById('about-dialog').open()" alt="À propos"></paper-icon-button>
             </paper-toolbar>
             <div class="list">
             {{ if .BadStations }}
@@ -43,5 +44,6 @@
             {{ end }}
             </div>
         </paper-header-panel>
+        {{template "footer.html"}}
     </body>
 </html>

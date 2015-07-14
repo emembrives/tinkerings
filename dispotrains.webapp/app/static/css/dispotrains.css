@@ -36,6 +36,10 @@ div.list paper-item-body {
     transition: 0.5s;
 }
 
+.header {
+    width: 100%;
+}
+
 .card {
     margin: 16px;
 }
@@ -57,3 +61,44 @@ div.list paper-item-body {
 .elevator-status {
     float: right;
 }
+
+.stats-graph-elem{
+    text-align: center;
+    margin-top: 16px;
+}
+
+
+
+.zoom {
+    fill: transparent;
+    cursor: pointer;
+}
+
+.y-axis path,
+.y-axis line,
+.x-axis path,
+.x-axis line,
+{
+    path,
+    line {
+        stroke: black;
+        fill: none;
+        stroke-width: 1px;
+    }
+}
+
+.x-axis text {
+    transform: translate(0px, -20px) rotate(-45deg);
+}
+
+.y-axis g line {
+    stroke: grey;
+    fill: none;
+    stroke-width: 1px;
+}
+
+.graph-body .line circle {
+    opacity: 0.1;
+    transform-origin: center;
+}
+

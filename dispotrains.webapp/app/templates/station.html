@@ -6,10 +6,11 @@
     </head>
 
     <body class="fullbleed vertical layout" >
-        <paper-header-panel class="flex orange">
+        <paper-header-panel>
             <paper-toolbar id="mainheader">
-                <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()"></paper-icon-button></a>
-                <span flex><h1>{{ .DisplayName }} - Dispotrains</h1></span>
+                <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()"></paper-icon-button>
+                <span class="header"><h1>{{ .DisplayName }} - Dispotrains</h1></span>
+                <a href="/gare/{{.Name}}/stats"><paper-icon-button id="stats" icon="assessment"></paper-icon-button></a>
             </paper-toolbar>
             <div class="list">
                 {{ $name := .Name }}

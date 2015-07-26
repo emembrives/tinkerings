@@ -230,6 +230,10 @@ func statusesToStatistics(events map[string][]string, reports []string, dbStatus
 }
 
 func AppHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Methods", "GET")
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+
 	session, err := mgo.Dial("localhost")
 	if err != nil {
 		panic(err)

@@ -96,7 +96,7 @@ func main() {
 	stations := make(map[string]*storage.Station)
 	for _, line := range lines {
 		for _, station := range line.GetStations() {
-			if _, ok := stations[station.Name]; ok == true {
+			if _, ok := stations[strings.ToLower(station.Name)]; ok == true {
 				for _, sLine := range station.Lines {
 					stations[strings.ToLower(station.Name)].AttachLine(sLine)
 				}

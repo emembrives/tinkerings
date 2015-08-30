@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/emembrives/tinkerings/dispotrains.webapp/client"
 	"github.com/emembrives/tinkerings/dispotrains.webapp/storage"
 	mgo "gopkg.in/mgo.v2"
@@ -13,7 +15,7 @@ const mapStationsToLines string = `function() {
     delete this["_id"];
     this["status"] = true;
     this["update"] = null;
-    
+
     for (var i = 0; i < this.elevators.length; i++) {
         var elevator = this.elevators[i];
         var status = elevator.status;
@@ -91,18 +93,20 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	var stations map[string]*storage.Station = make(map[string]*storage.Station)
+	stations := make(map[string]*storage.Station)
 	for _, line := range lines {
 		for _, station := range line.GetStations() {
-			if _, ok := stations[station.Name]; ok == true {
+			if _, ok := stations[strings.ToLower(station.Name)]; ok == true {
 				for _, sLine := range station.Lines {
-					stations[station.Name].AttachLine(sLine)
+					stations[strings.ToLower(station.Name)].AttachLine(sLine)
 				}
 			} else {
-				stations[station.Name] = station
+				stations[strings.ToLower(station.Name)] = station
 			}
 		}
 	}
+	AddPositionToStations(stations)
+
 	c.RemoveAll(bson.M{})
 	for _, station := range stations {
 		err = c.Insert(&station)

@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Carnet de Voyage</string>
-
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="hello_world">Carnet de Voyage !</string>
+    <string name="openid_client">884671963047-ng8iuuvr5matvka868euche5he4nq7jm.apps.googleusercontent.com</string>
 </resources>

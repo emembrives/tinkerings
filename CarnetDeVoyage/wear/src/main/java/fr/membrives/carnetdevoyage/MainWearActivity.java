@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.speech.RecognizerIntent;
+import android.support.wearable.activity.WearableActivity;
 import android.support.wearable.view.WatchViewStub;
 import android.widget.TextView;
 
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public class MainWearActivity extends Activity {
+public class MainWearActivity extends WearableActivity {
     private static final int SPEECH_REQUEST_CODE = 0;
     private TextView mTextView;
 
@@ -37,10 +38,21 @@ public class MainWearActivity extends Activity {
             }
         });
 
+        HandheldCommunicationService.startSendVoiceInput(this, "Départ");
+        setAmbientEnabled();
+    }
+
+    private void recordSpeech() {
         Vibrator v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
         // Vibrate for 250 milliseconds
         v.vibrate(250);
         displaySpeechRecognizer();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        HandheldCommunicationService.startSendVoiceInput(this, "Arrivée");
     }
 
     // Create an intent that can start the Speech Recognizer activity
@@ -60,7 +72,7 @@ public class MainWearActivity extends Activity {
             List<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             String spokenText = results.get(0);
             mTextView.setText(spokenText);
-            HandheldCommunicationService.startSendVoiceInput(this, results);
+            HandheldCommunicationService.startSendVoiceInput(this, results.get(0));
         } else {
             Vibrator v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
             v.vibrate(new long[]{250, 250, 250}, 2);

@@ -44,10 +44,10 @@ public class HandheldCommunicationService extends IntentService
      *
      * @see IntentService
      */
-    public static void startSendVoiceInput(Context context, List<String> voiceInputs) {
+    public static void startSendVoiceInput(Context context, String voiceInput) {
         Intent intent = new Intent(context, HandheldCommunicationService.class);
         intent.setAction(ACTION_VOICE_INPUT);
-        intent.putExtra(EXTRA_VOICE_INPUT, voiceInputs.get(0));
+        intent.putExtra(EXTRA_VOICE_INPUT, voiceInput);
         context.startService(intent);
         Log.i(TAG, "startSendVoiceInput");
     }

@@ -1,9 +1,13 @@
 package fr.membrives.carnetdevoyage;
 
+import android.content.Context;
+import android.location.Location;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderApi;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
@@ -48,6 +52,16 @@ public class ListenerService extends WearableListenerService implements IWitList
         mWit = new Wit(accessToken, this);
         mWit.enableContextLocation(this);
         mRootRef = new Firebase("https://incandescent-heat-5800.firebaseio.com/carnetdevoyage");
+    }
+
+    private GoogleApiClient getGoogleApiClient(Context context) {
+        return new GoogleApiClient.Builder(context).addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this).build();
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        Log.i(TAG, "GMS connected");
     }
 
     @Override

@@ -6,16 +6,12 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.firebase.client.Firebase;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.FusedLocationProviderApi;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.wearable.MessageEvent;
-import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-
-import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,23 +20,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import ai.wit.sdk.IWitListener;
 import ai.wit.sdk.Wit;
 import ai.wit.sdk.model.WitOutcome;
 
-public class ListenerService extends WearableListenerService implements IWitListener {
+public class ListenerService extends WearableListenerService
+        implements IWitListener, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener {
     private static final long CONNECTION_TIME_OUT_MS = 3000;
+    // Used for voice messages (free text).
     private static final String RECORDING_ENDPOINT = "/recording";
+    // Used for non-voice messages (start/stop).
+    private static final String AUTO_RECORDING_ENDPOINT = "/recording/auto";
     private static final String TAG = "ListenerService";
 
     private String nodeId;
     private Wit mWit;
     private Firebase mRootRef;
+    private GoogleApiClient mGoogleApiClient;
     private Map<String, Date> mMessages = new HashMap<>();
 
 
@@ -52,31 +51,51 @@ public class ListenerService extends WearableListenerService implements IWitList
         mWit = new Wit(accessToken, this);
         mWit.enableContextLocation(this);
         mRootRef = new Firebase("https://incandescent-heat-5800.firebaseio.com/carnetdevoyage");
+        mGoogleApiClient = getGoogleApiClient(this);
     }
 
     private GoogleApiClient getGoogleApiClient(Context context) {
-        return new GoogleApiClient.Builder(context).addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).build();
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        Log.i(TAG, "GMS connected");
+        GoogleApiClient client = new GoogleApiClient.Builder(context).addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
+        client.connect();
+        return client;
     }
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         if (messageEvent.getPath().equals(RECORDING_ENDPOINT)) {
             nodeId = messageEvent.getSourceNodeId();
+            Location lastLocation =
+                    LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             String message = new String(messageEvent.getData());
             Date date = new Date();
             mMessages.put(message, date);
-            writeMessageToFirebase(date, message);
+            writeMessageToFirebase(date, message, lastLocation);
             mWit.captureTextIntent(message);
+        } else if (messageEvent.getPath().equals(AUTO_RECORDING_ENDPOINT)) {
+            nodeId = messageEvent.getSourceNodeId();
+            Location lastLocation = null;
+            synchronized (mGoogleApiClient) {
+                if (mGoogleApiClient.isConnecting()) {
+                    try {
+                        mGoogleApiClient.wait();
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, "Interrupted while waiting for GoogleApiClient", e);
+                        return;
+                    }
+                }
+                if (mGoogleApiClient.isConnected()) {
+                    lastLocation =
+                            LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                }
+            }
+            String message = new String(messageEvent.getData());
+            Date date = new Date();
+            writeMessageToFirebase(date, message, lastLocation);
         }
     }
 
-    private void writeMessageToFirebase(Date date, String message) {
+    private void writeMessageToFirebase(Date date, String message, Location lastLocation) {
         TimeZone tz = TimeZone.getTimeZone("Europe/Paris");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.FRANCE);
         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.FRANCE);
@@ -87,6 +106,10 @@ public class ListenerService extends WearableListenerService implements IWitList
 
         Firebase messageRef = mRootRef.child("records").child(dateIso).child(timeIso);
         messageRef.child("record").setValue(message);
+        if (lastLocation != null) {
+            messageRef.child("location").child("latitude").setValue(lastLocation.getLatitude());
+            messageRef.child("location").child("longitude").setValue(lastLocation.getLongitude());
+        }
     }
 
     private void writeWitToFirebase(Date date, List<WitOutcome> outcomes) {
@@ -106,13 +129,6 @@ public class ListenerService extends WearableListenerService implements IWitList
                 entityRef.child(entry.getKey()).setValue(entry.getValue().toString());
             }
         }
-    }
-
-    private void reply(String message) {
-        GoogleApiClient client = new GoogleApiClient.Builder(this).addApi(Wearable.API).build();
-        client.blockingConnect(CONNECTION_TIME_OUT_MS, TimeUnit.MILLISECONDS);
-        Wearable.MessageApi.sendMessage(client, nodeId, message, null);
-        client.disconnect();
     }
 
     @Override
@@ -146,5 +162,26 @@ public class ListenerService extends WearableListenerService implements IWitList
     @Override
     public String witGenerateMessageId() {
         return null;
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        synchronized (mGoogleApiClient) {
+            mGoogleApiClient.notifyAll();
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        synchronized (mGoogleApiClient) {
+            mGoogleApiClient.notifyAll();
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        synchronized (mGoogleApiClient) {
+            mGoogleApiClient.notifyAll();
+        }
     }
 }

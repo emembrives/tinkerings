@@ -14,7 +14,6 @@ import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -26,10 +25,13 @@ public class HandheldCommunicationService extends IntentService
     private static final String TAG = "carnetdevoyage.HCS";
     private static final String ACTION_VOICE_INPUT =
             "fr.membrives.carnetdevoyage.action" + ".VOICE_INPUT";
-    private static final String EXTRA_VOICE_INPUT =
-            "fr.membrives.carnetdevoyage.extra" + ".VOICE_INPUT";
+    private static final String ACTION_INPUT = "fr.membrives.carnetdevoyage.action" + ".INPUT";
+    private static final String EXTRA_INPUT = "fr.membrives.carnetdevoyage.extra" + ".INPUT";
 
+    // Used for voice messages (free text).
     private static final String RECORDING_ENDPOINT = "/recording";
+    // Used for non-voice messages (start/stop).
+    private static final String AUTO_RECORDING_ENDPOINT = "/recording/auto";
     private static final String HANDHELD_CAPABILITY_NAME = "recording";
 
     private GoogleApiClient mGoogleApiClient;
@@ -47,9 +49,15 @@ public class HandheldCommunicationService extends IntentService
     public static void startSendVoiceInput(Context context, String voiceInput) {
         Intent intent = new Intent(context, HandheldCommunicationService.class);
         intent.setAction(ACTION_VOICE_INPUT);
-        intent.putExtra(EXTRA_VOICE_INPUT, voiceInput);
+        intent.putExtra(EXTRA_INPUT, voiceInput);
         context.startService(intent);
-        Log.i(TAG, "startSendVoiceInput");
+    }
+
+    public static void startSendInput(Context context, String input) {
+        Intent intent = new Intent(context, HandheldCommunicationService.class);
+        intent.setAction(ACTION_INPUT);
+        intent.putExtra(EXTRA_INPUT, input);
+        context.startService(intent);
     }
 
     @Override
@@ -119,8 +127,11 @@ public class HandheldCommunicationService extends IntentService
         if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_VOICE_INPUT.equals(action)) {
-                final String voiceInput = intent.getStringExtra(EXTRA_VOICE_INPUT);
+                final String voiceInput = intent.getStringExtra(EXTRA_INPUT);
                 handleSendVoiceInput(voiceInput);
+            } else if (ACTION_INPUT.equals(action)) {
+                final String input = intent.getStringExtra(EXTRA_INPUT);
+                handleSendInput(input);
             } else {
                 throw new UnsupportedOperationException("Unknown operation");
             }
@@ -155,4 +166,29 @@ public class HandheldCommunicationService extends IntentService
         }
     }
 
+    private void handleSendInput(String input) {
+        synchronized (mNodeId) {
+            if (mNodeId.get() == null) {
+                Log.i(TAG, "Waiting for node");
+                try {
+                    mNodeId.wait(3000);
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "Error while waiting for node ID.", e);
+                }
+            }
+            Wearable.MessageApi
+                    .sendMessage(mGoogleApiClient, mNodeId.get(), AUTO_RECORDING_ENDPOINT,
+                            input.getBytes())
+                    .setResultCallback(new ResultCallback<MessageApi.SendMessageResult>() {
+                        @Override
+                        public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                            if (!sendMessageResult.getStatus().isSuccess()) {
+                                Log.e(TAG, "Unable to send message");
+                            } else {
+                                Log.i(TAG, "Message sent");
+                            }
+                        }
+                    });
+        }
+    }
 }

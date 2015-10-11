@@ -1,5 +1,6 @@
+html,body { height: 100%; margin: 0px; padding: 0px; }
+
 body {
-  margin: 0;
   font-family: OpenSans, sans-serif;
   font-size: 14px;
 }
@@ -47,11 +48,10 @@ p {
   pointer-events: none;
 }
 
-#map {
-  position:absolute;
-  top:0;
-  bottom:0;
+.full-height {
+  height:100%;
   width:100%;
+
 }
 
 #selected,

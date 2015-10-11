@@ -3,10 +3,13 @@
 
 import xml.etree.ElementTree as ET
 
+STOPWORDS = set(['le', 'la', 'du', 'de', 'gare', ' '])
+
 def prepare_names(raw_name):
     name = ' ' + raw_name.lower() + ' '
     name = name.replace('-', ' ')
     name = name.replace(' st ', ' saint ')
+    name = name.replace("d'", ' ')
     name = name.replace(u'é', 'e')
     name = name.replace(u'è', 'e')
     name = name.replace(u'ê', 'e')
@@ -14,7 +17,7 @@ def prepare_names(raw_name):
     name = name.replace(u'ô', 'o')
     name = name.replace(u'à', 'a')
     name = name.replace(u'ç', 'c')
-    return name.strip()
+    return set(name.split(' ')).difference(STOPWORDS)
 
 
 class OSMStation(object):
@@ -31,12 +34,6 @@ class OSMStation(object):
                 break
         if not name_found:
             missing_name[self.osm_id] = self
-        
-    def __init(self, name, lat, lon, osm_id):
-        self.name = name
-        self.lat = lat
-        self.lon = lon
-        self.osm_id = osm_id
 
     def attach(self, station):
         self.dispotrains_station = station
@@ -86,8 +83,8 @@ import json
 
 dispotrains_stations = []
 with open('stations.json') as f:
-    for line in f.readlines():
-        station = json.loads(line.strip())
+    stations = json.load(f)
+    for station in stations:
         if len(station["lines"]) == 1 and station["lines"][0]["id"] == "Tzen1":
             # TZen 1 is a bus line
             continue
@@ -105,72 +102,87 @@ def haversine(lon1, lat1, lon2, lat2):
     Calculate the great circle distance between two points
     on the earth (specified in decimal degrees)
     """
-    # convert decimal degrees to radians 
+    # convert decimal degrees to radians
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2])
 
-    # haversine formula 
-    dlon = lon2 - lon1 
-    dlat = lat2 - lat1 
+    # haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-    c = 2 * asin(sqrt(a)) 
+    c = 2 * asin(sqrt(a))
     r = 6371.0 # Radius of earth in kilometers. Use 3956 for miles
     return c * r
 
 
 OSM_MANUAL = {
-u"Gare de Cergy Préfecture": 2320446018,
-u"CITE UNIVERSITAIRE": 2656855599,
+u"Aéroport CDG Terminal 2 TGV": 225119209,
+u"CHATELET LES HALLES": 3190883103,
 u"Cité Universitaire": 1773529787, # Tram
-u"Gare de Cergy St Christophe": 2320446019,
-u"LA COURNEUVE - 8 MAI 1945": 270244850,
-u"Maurice Lachâtre": 2283276387,
+u"CITE UNIVERSITAIRE": 2656855599,
+u"Funiculaire Gare Basse": 3417692497,
+u"Funiculaire Gare Haute": 3417692499,
 u"GARE D'ACHERES VILLE": 2320446016,
-u"Gare de vaucresson": 415275831,
+u"Gare de Cergy Préfecture": 2320446018,
+u"Gare de Cergy St Christophe": 2320446019,
 u"GARE DE NEUVILLE UNIVERSITE": 2320446021,
 u"GARE DE NOISY CHAMPS": 195306266,
-u"Aéroport CDG Terminal 2 TGV": 225119209,
-u"GARE DE VAL D EUROPE": 1059567460,
-u"GARE DE ST GERMAIN EN LAYE": 87360108,
-u"GARE DE ST GERMAIN EN LAYE GRANDE CEINTURE": 2315855073,
 u"GARE DE SEVRAN BEAUDOTTES": 3571816329,
-u"CHATELET LES HALLES": 3190883103,
+u"GARE DE ST CLOUD": 1302120644,
+u"GARE DE ST GERMAIN EN LAYE GRANDE CEINTURE": 2315855073,
+u"GARE DE ST GERMAIN EN LAYE": 87360108,
 u"GARE DE TORCY MARNE LA VALLEE": 245282439,
-        }
+u"GARE DE VAL D EUROPE": 1059567460,
+u"Gare de vaucresson": 415275831,
+u"LA COURNEUVE - 8 MAI 1945": 270244850,
+u"MAIRIE": 1616103854,
+u"Maurice Lachâtre": 2283276387,
+u"PARC DE ST CLOUD": 1370384292,
+u"SIX ROUTES - TRAMWAY": 2283276654,
+u"THEATRE GERARD PHILIPE": 2283276557,
+u"Villejuif-Louis Aragon": 318536848,
+u"GARE DU VESINET CENTRE": 1806123617,
+u"GARE DE GRIGNY CENTRE": 323213982,
+u"CENTRE DE CHATILLON": 2706029289,
+}
 
 
 unmatched_stations = osm_stations[:]
 
 for station in dispotrains_stations:
     best_station = None
-    best_station_val = 1
+    best_station_val = 0.5
     for osm_station in unmatched_stations:
         if station['name'] in OSM_MANUAL and osm_station.osm_id == OSM_MANUAL[station['name']]:
-            station['osm'] = osm_station
-            station['d'] = haversine(float(station['position']['longitude']),
-                    float(station['position']['latitude']),
-                    osm_station.lon,
-                    osm_station.lat)
-            osm_station.attach(station)
-            unmatched_stations.remove(osm_station)
+            best_station = osm_station
             break
-        d = haversine(float(station['position']['longitude']),
-                      float(station['position']['latitude']),
-                      osm_station.lon,
-                      osm_station.lat)
-        if d < best_station_val:
-            best_station_val = d
+        dispotrains_names = len(prepare_names(station['name']))
+        osm_names = len(prepare_names(osm_station.name))
+        intersection = len(prepare_names(station['name']).intersection(
+            prepare_names(osm_station.name)))
+        score = float(2*intersection)/(dispotrains_names + osm_names)
+        if score > best_station_val:
+            best_station_val = score
             best_station = osm_station
     if best_station != None:
         unmatched_stations.remove(best_station)
         station['osm'] = best_station
-        station['d'] = best_station_val
+        station['d'] = haversine(float(station['position']['longitude']),
+                float(station['position']['latitude']),
+                best_station.lon,
+                best_station.lat)
         best_station.attach(station)
+    else:
+        print "Unable to match " + station['name']
 
 import csv
 with open('stations-coordinates.csv', 'w') as f:
     writer = csv.writer(f)
     for station in dispotrains_stations:
-        writer.writerow([station['name'].encode('utf-8'), station['city'].encode('utf-8'), station['osm'].lat, station['osm'].lon, station['osm'].osm_id])
-    
-
-
+        if 'osm' not in station:
+            print station
+        writer.writerow([
+            station['name'].encode('utf-8'),
+            station['city'].encode('utf-8'),
+            station['osm'].lat,
+            station['osm'].lon,
+            station['osm'].osm_id])

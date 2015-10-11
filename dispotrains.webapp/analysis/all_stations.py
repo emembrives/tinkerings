@@ -112,19 +112,27 @@ MERGE_STATIONS = {
     3574677130: [1785132453], # Pont du Garigliano
     3586000197: [137533248], # La Défense
     269296749: [241926523], # Marne la Vallée Chessy
+    225119209: [3530909557, 1882558198], # CDG 2
+    3531066587: [1883637808], # La Fraternelle - Rungis
+    327613695: [3090733718], # Gare du Nord
+    255687197: [2367372622], # Issy Val de Seine
+    264778142: [2799009872], # Porte de la Villette
 }
 
 def merge_osm_stations(stations):
-    station_map = {}
-    for station in stations:
-        for osm_id in station.osm_ids:
-            station_map[osm_id] = station
+    stations = list(stations)
+    def get_station(osm_id):
+        for station_index in range(len(stations)):
+            if osm_id in stations[station_index].osm_ids:
+                return station_index, stations[station_index]
+        return -1, None
     for osm_id, ids_to_merge in MERGE_STATIONS.items():
-        receiver = station_map[osm_id]
+        _, receiver = get_station(osm_id)
         for id_to_merge in ids_to_merge:
-            receiver.merge(station_map[id_to_merge])
-            del station_map[id_to_merge]
-    return set(station_map.values())
+            index_to_merge, station_to_merge = get_station(id_to_merge)
+            receiver.merge(station_to_merge)
+            del stations[index_to_merge]
+    return stations
 
 def extract_accessible_stations(csv_filepath):
     """Extracts stations from a csv file listing accessible stations."""

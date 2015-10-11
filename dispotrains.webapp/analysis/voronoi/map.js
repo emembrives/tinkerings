@@ -70,6 +70,7 @@ AccessMap.prototype._mergeData = function(values) {
     }
     for (var i = 0; i < availabilities.length; i++) {
       if (d.name === availabilities[i].name) {
+        d.name = availabilities[i].displayname;
         d.good = availabilities[i].good;
         return d;
       }
@@ -164,7 +165,7 @@ AccessMap.prototype.draw = function(points) {
       .attr("id", function(d, i) { return "path-" + i; })
       .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
       .style("stroke", d3.rgb(50, 50, 50))
-      .on('click', this._selectPoint)
+      .on('click', function(d) { self._selectPoint(d3.select(this), d); })
       .classed("selected", function(d) { return this._lastSelectedPoint == d })
       .classed("inaccessible", function(d) { return !d.point.accessible; })
       .classed("malfunction",
@@ -175,6 +176,7 @@ AccessMap.prototype.draw = function(points) {
   paths.selectAll("path")
       .on("mouseover",
           function(d, i) {
+            self._selectPoint(d3.select(this), d);
             d3.select(this).style('fill', d3.rgb(31, 120, 180));
             svg.select('circle#point-' + i).style('fill', d3.rgb(31, 120, 180))
           })
@@ -190,14 +192,12 @@ AccessMap.prototype.draw = function(points) {
       .attr("id", function(d, i) { return "point-" + i; })
       .attr("transform",
             function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-      .attr("r", 1)
+      .attr("r", 1.5)
       .attr('stroke', 'none');
 };
 
-AccessMap.prototype._selectPoint = function() {
+AccessMap.prototype._selectPoint = function(cell, point) {
   d3.selectAll('.selected').classed('selected', false);
-
-  var cell = d3.select(this), point = cell.datum();
 
   this._lastSelectedPoint = point;
   cell.classed('selected', true);

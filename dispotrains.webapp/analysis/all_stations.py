@@ -75,11 +75,11 @@ class Station(object):
         return Station(name, osm_id, lat, lon)
 
     def __repr__(self):
-        return "Station(%d)" % (self.osm_id)
+        return "Station(%s)" % (self.name)
 
     def __eq__(self, other):
         if isinstance(other, Station):
-            return self.osm_id == other.osm_id
+            return self.name == other.name
         else:
             return False
 
@@ -102,7 +102,29 @@ def extract_stations_from_dump(dump_path):
             allstations[station.name].merge(station)
         else:
             allstations[station.name] = station
-    return allstations.values()
+    return merge_osm_stations(allstations.values())
+
+MERGE_STATIONS = {
+    26824135: [27371889, 1309031698, 1308998006], # Gare de Lyon
+    1731763794: [241928557], # Nation
+    3533789791: [3542631493], # Saint Lazare
+    243496033: [1731763792], # Etoile
+    3574677130: [1785132453], # Pont du Garigliano
+    3586000197: [137533248], # La Défense
+    269296749: [241926523], # Marne la Vallée Chessy
+}
+
+def merge_osm_stations(stations):
+    station_map = {}
+    for station in stations:
+        for osm_id in station.osm_ids:
+            station_map[osm_id] = station
+    for osm_id, ids_to_merge in MERGE_STATIONS.items():
+        receiver = station_map[osm_id]
+        for id_to_merge in ids_to_merge:
+            receiver.merge(station_map[id_to_merge])
+            del station_map[id_to_merge]
+    return set(station_map.values())
 
 def extract_accessible_stations(csv_filepath):
     """Extracts stations from a csv file listing accessible stations."""

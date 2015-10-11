@@ -1,0 +1,22 @@
+{
+  "name": "voronoi",
+  "version": "0.0.1",
+  "homepage": "https://github.com/emembrives/tinkerings",
+  "authors": [
+    "Etienne J. Membrives <etienne@membrives.fr>"
+  ],
+  "description": "Voronoi map of accessible public transport in Paris region",
+  "main": "map.html",
+  "license": "Apache 2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "~3.5.6",
+    "d3.promise": "~1.0.0"
+  }
+}

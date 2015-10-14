@@ -5,28 +5,43 @@ body {
   font-size: 14px;
 }
 
-p {
+.brand-logo {
+  margin: 0 20px;
+}
+
+.box {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  width: 100%;
   margin: 0;
-  margin-bottom: 10px;
 }
 
-.point-cell {
-  fill: none;
-  pointer-events: all;
-  stroke: #000;
-  stroke-opacity: .2;
+.box nav {
+  flex: 0 1 auto;
+  margin: 0;
+  z-index: 1500;
 }
 
-.point-cell:hover, .point-cell.selected {
-  fill: none;
-  stroke: #000;
-  stroke-opacity: .6;
-  stroke-width: 2px;
+nav .switch {
+  margin: 0 20px;
 }
 
-.point-cell.selected {
-  stroke-opacity: 1;
-  stroke-width: 3px;
+nav .side-nav {
+  z-index: 1500;
+}
+
+#sidenav-overlay {
+  z-index: 99;
+}
+
+.box .map-container {
+  flex: 1 1 auto;
+  display: flex;
+  flex-flow: column;
+  width: 100%;
+  margin: 0;
+  position: relative;
 }
 
 .inaccessible {
@@ -49,9 +64,8 @@ p {
 }
 
 .full-height {
-  height:100%;
+  flex: 1 1 auto;
   width:100%;
-
 }
 
 #selected,

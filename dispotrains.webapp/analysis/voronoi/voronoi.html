@@ -24,26 +24,74 @@
     <title>Accessibilité du réseau de transport en commun d'Ile-de-France</title>
   </head>
   <body>
-    <nav>
-      <div class="nav-wrapper">
-        <a href="#" class="brand-logo">Logo</a>
-        <ul id="nav-mobile" class="right hide-on-med-and-down">
-          <li><a href="sass.html">Sass</a></li>
-          <li><a href="badges.html">Components</a></li>
-          <li><a href="collapsible.html">JavaScript</a></li>
-        </ul>
+    <div class="box">
+      <nav class="row">
+        <div class="nav-wrapper">
+          <a href="#!" class="brand-logo">Dispotrains - carte de situation</a>
+          <a href="#" data-activates="mobile-nav" class="button-collapse"><i class="material-icons">menu</i></a>
+          <ul class="right hide-on-med-and-down">
+            <li>
+              <div class="switch">
+                Gares
+                <label>
+                  Accessibles
+                  <input type="checkbox" checked>
+                  <span class="lever"></span>
+                  Toutes
+                </label>
+              </div>
+            </li>
+            <li>
+              <div class="switch">
+                <label>
+                  Etat actuel
+                  <input type="checkbox">
+                  <span class="lever"></span>
+                  Statistiques
+                </label>
+              </div>
+            </li>
+          </ul>
+          <ul class="side-nav" id="mobile-nav">
+            <li>
+              <div class="switch">
+                Gares
+                <label>
+                  Accessibles
+                  <input type="checkbox" checked>
+                  <span class="lever"></span>
+                  Toutes
+                </label>
+              </div>
+            </li>
+            <li>
+              <div class="switch">
+                <label>
+                  Etat actuel
+                  <input type="checkbox">
+                  <span class="lever"></span>
+                  Statistiques
+                </label>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div class="map-container row">
+        <div class="full-height" id='map'></div>
+        <div id="selected"><h1></h1></div>
       </div>
-    </nav>
-    <div class="full-height">
-      <div class="full-height" id='map'></div>
-      <div id="selected"><h1></h1></div>
     </div>
   <script src='map.js'></script>
   <script type="text/javascript">
-var map = new AccessMap(
-document.getElementById('map'),
-document.getElementById('selected'));
-map.loadAndDraw();
+$( document ).ready(function(){
+  $(".button-collapse").sideNav();
+  var map = new AccessMap(
+    document.getElementById('map'),
+    document.getElementById('selected'));
+    map.loadAndDraw();
+  }
+);
 </script>
   </body>
 </html>

@@ -62,12 +62,30 @@ div#drawer {
   margin-right: 10px;
 }
 
-paper-card .header {
+paper-card .card-content {
   border-bottom: 1px solid #e5e5e5;
 }
 
-paper-item {
-  border-bottom: 1px solid #e5e5e5;
+paper-card header h2 {
+  margin: 0;
+  padding: 0;
+}
+
+paper-card #close-btn {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+
+#selected .avatar {
+  display: inline-block;
+  border-radius: 50%;
+  background: #e91e63;
+  color: white;
+  height: 48px;
+  width: 48px;
+  line-height: 48px;
+  text-align: center;
 }
 
 #selected {

@@ -218,8 +218,9 @@ AccessMap.prototype._selectPoint = function(cell, point) {
   cell.classed('selected', true);
 
   d3.select('#selected')
-    .attr("heading", point.point.name)
     .classed('hidden', false);
+  d3.select('#selected #header').text(point.point.name);
+
   if (!point.point.accessible) {
     d3.select("#selected #card-inaccessible").style("display", null);
     d3.select("#selected #card-accessible").style("display", "none");

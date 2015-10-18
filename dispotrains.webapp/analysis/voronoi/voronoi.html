@@ -29,6 +29,7 @@
 
     <!-- Iron -->
     <link rel="import" href="/static/js/bower_components/iron-icons/iron-icons.html">
+    <link rel="import" href="/static/js/bower_components/iron-icons/maps-icons.html">
 
 
     <link href='analysis.css' rel='stylesheet' />
@@ -53,6 +54,15 @@
           <div main>
             <paper-fab  mini id="settings" icon="settings" paper-drawer-toggle alt="Options"></paper-fab>
             <paper-card elevation="1" class="hidden" id="selected">
+              <header class="card-content">
+                <h2>
+                  <div class="avatar">
+                    <iron-icon icon="maps:directions-transit"></iron-icon>
+                  </div>
+                  <span id="header"></span>
+                  <paper-icon-button icon="close" id="close-btn"></paper-icon-button>
+                </h2>
+              </header>
               <div id="card-inaccessible">
                 <div class="card-content">
                   Gare inacessible
@@ -63,8 +73,8 @@
                   <dl>
                     <dt><span id="line-count"></span> ligne(s)</dt>
                     <dd id="lines"></dd>
-                    <dt><span id="elevator-count"></span> ascenseurs</dt>
-                    <dd><span id="broken-elevator-count"></span> ascenseurs hors service</dd>
+                    <dt><span id="elevator-count"></span> ascenseur(s)</dt>
+                    <dd><span id="broken-elevator-count"></span> ascenseur(s) hors service</dd>
                   </dl>
                 </div>
                 <div class="card-action">
@@ -86,6 +96,9 @@ $( document ).ready(function(){
   $("#toggle-accessible").on("change", function() {
     map.accessible = $("#toggle-accessible").attr('checked') === "checked";
     map.loadAndDraw();
+  });
+  $("#close-btn").click(function() {
+    $("#selected").addClass("hidden");
   });
 });
 </script>

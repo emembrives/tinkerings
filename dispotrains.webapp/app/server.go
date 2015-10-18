@@ -42,12 +42,6 @@ type DisplayStation struct {
 	Elevators   []*LocElevator
 }
 
-type DataStatus struct {
-	Elevator   string
-	State      string
-	Lastupdate time.Time
-}
-
 type LocElevator storage.Elevator
 
 func (e *LocElevator) LocalStatusDate() string {
@@ -110,24 +104,6 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-type StationStats struct {
-	Reports         int
-	ReportDays      int
-	Malfunctions    int
-	MalfunctionDays int
-	FunctionDays    int
-	PercentFunction float64
-	Elevators       map[string]ElevatorStats
-}
-
-type ElevatorStats struct {
-	Name            string
-	Malfunctions    int
-	MalfunctionDays int
-	FunctionDays    int
-	PercentFunction float64
-}
-
 func StatsHandler(w http.ResponseWriter, req *http.Request) {
 	session, err := mgo.Dial("localhost")
 	if err != nil {
@@ -135,8 +111,8 @@ func StatsHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	defer session.Close()
 	c_stations := session.DB("dispotrains").C("stations")
-	c_statuses := session.DB("dispotrains").C("statuses")
 
+	c_statuses := session.DB("dispotrains").C("statuses")
 	vars := mux.Vars(req)
 	stationName := vars["station"]
 
@@ -151,7 +127,7 @@ func StatsHandler(w http.ResponseWriter, req *http.Request) {
 	index := mgo.Index{
 		Key: []string{"elevator"},
 	}
-	err = c_stations.EnsureIndex(index)
+	err = c_statuses.EnsureIndex(index)
 	if err != nil {
 		panic(err)
 	}

@@ -20,8 +20,12 @@
     <link rel="import" href="/static/js/bower_components/paper-icon-button/paper-icon-button.html">
     <link rel="import" href="/static/js/bower_components/paper-button/paper-button.html">
     <link rel="import" href="/static/js/bower_components/paper-toolbar/paper-toolbar.html">
-    <link rel="import" href="/static/js/bower_components/paper-dialog/paper-dialog.html">
     <link rel="import" href="/static/js/bower_components/paper-card/paper-card.html">
+    <link rel="import" href="/static/js/bower_components/paper-drawer-panel/paper-drawer-panel.html">
+    <link rel="import" href="/static/js/bower_components/paper-fab/paper-fab.html">
+    <link rel="import" href="/static/js/bower_components/paper-toggle-button/paper-toggle-button.html">
+    <link rel="import" href="/static/js/bower_components/paper-item/paper-item.html">
+    <link rel="import" href="/static/js/bower_components/paper-item/paper-item-body.html">
 
     <!-- Iron -->
     <link rel="import" href="/static/js/bower_components/iron-icons/iron-icons.html">
@@ -35,14 +39,42 @@
         <paper-toolbar id="mainheader">
             <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()" alt="Retour"></paper-icon-button>
             <span class="header"><h1>Carte d'accessibilité</h1></span>
-            <paper-icon-button id="settings" icon="settings" onclick="document.getElementById('settings-dialog').open()" alt="Options"></paper-icon-button>
         </paper-toolbar>
-        <div class="map-container row fit">
-          <div class="full-height fit" id='map'></div>
-          <paper-card elevation="1" class="hidden" id="selected">
-            <div class="card-content">Station</div>
-          </paper-card>
-        </div>
+        <paper-drawer-panel id="settings-drawer" right-drawer drawer-width="340px">
+          <div class="seamed-card" drawer>
+            <h2>Options</h2>
+            <p>
+              <span class="toggle-first">Toutes gares</span> <paper-toggle-button id="toggle-accessible"> Gares accessibles </paper-toggle-button>
+            </p>
+            <p>
+              <span class="toggle-first">État actuel</span><paper-toggle-button id="toggle-statistics"> Statistiques </paper-toggle-button>
+            </p>
+          </div>
+          <div main>
+            <paper-fab  mini id="settings" icon="settings" paper-drawer-toggle alt="Options"></paper-fab>
+            <paper-card elevation="1" class="hidden" id="selected">
+              <div id="card-inaccessible">
+                <div class="card-content">
+                  Gare inacessible
+                </div>
+              </div>
+              <div id="card-accessible">
+                <div class="card-content">
+                  <dl>
+                    <dt><span id="line-count"></span> ligne(s)</dt>
+                    <dd id="lines"></dd>
+                    <dt><span id="elevator-count"></span> ascenseurs</dt>
+                    <dd><span id="broken-elevator-count"></span> ascenseurs hors service</dd>
+                  </dl>
+                </div>
+                <div class="card-action">
+                  <a id="dispotrains" href=""><paper-button>Voir sur Dispotrains</paper-button></a>
+                </div>
+              </div>
+            </paper-card>
+            <div class="full-height" id='map'></div>
+          </div>
+        </paper-drawer-panel>
     </paper-header-panel>
   <script src='map.js'></script>
   <script type="text/javascript">
@@ -50,9 +82,12 @@ $( document ).ready(function(){
   var map = new AccessMap(
     document.getElementById('map'),
     document.getElementById('selected'));
+  map.loadAndDraw();
+  $("#toggle-accessible").on("change", function() {
+    map.accessible = $("#toggle-accessible").attr('checked') === "checked";
     map.loadAndDraw();
-  }
-);
+  });
+});
 </script>
   </body>
 </html>

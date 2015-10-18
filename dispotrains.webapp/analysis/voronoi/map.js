@@ -1,4 +1,5 @@
 function AccessMap(mapEl, captionEl) {
+  this.accessible = false;
   this._mapEl = mapEl;
   this._captionEl = captionEl;
   this._points = [];
@@ -71,7 +72,10 @@ AccessMap.prototype._mergeData = function(values) {
     for (var i = 0; i < availabilities.length; i++) {
       if (d.name.toLowerCase() === availabilities[i].name.toLowerCase()) {
         d.name = availabilities[i].displayname;
+        d.dispotrains_id = availabilities[i].name;
         d.good = availabilities[i].good;
+        d.lines = availabilities[i].lines;
+        d.elevators = availabilities[i].elevators;
         return d;
       }
     }
@@ -117,6 +121,10 @@ AccessMap.prototype.draw = function(points) {
     if (!drawLimit.contains(latlng)) {
       return false
     };
+
+    if (!d.accessible && self.accessible) {
+      return false;
+    }
 
     var point = self._map.latLngToLayerPoint(latlng);
 
@@ -212,4 +220,38 @@ AccessMap.prototype._selectPoint = function(cell, point) {
   d3.select('#selected')
     .attr("heading", point.point.name)
     .classed('hidden', false);
+  if (!point.point.accessible) {
+    d3.select("#selected #card-inaccessible").style("display", null);
+    d3.select("#selected #card-accessible").style("display", "none");
+    return;
+  } else {
+    d3.select("#selected #card-inaccessible").style("display", "none");
+    d3.select("#selected #card-accessible").style("display", null);
+  }
+  d3.select("#selected #line-count").text(point.point.lines.length);
+  d3.select("#selected #lines").text(this._lineStr(point.point.lines));
+  d3.select("#selected #elevator-count").text(point.point.elevators.length)
+  d3.select("#selected #broken-elevator-count")
+    .text(this._elevatorStr(point.point.elevators));
+  d3.select("#selected a#dispotrains")
+    .attr("href", "/gare/" + point.point.dispotrains_id);
+};
+
+AccessMap.prototype._lineStr = function(lines) {
+  var s = lines[0].id;
+  for (var i = 1; i < lines.length; i++) {
+    s += ", ";
+    s += lines[i].id;
+  }
+  return s;
+};
+
+AccessMap.prototype._elevatorStr = function(elevators) {
+  var bad = 0;
+  for (var i in elevators) {
+    if (elevators[i].status.state !== "Disponible") {
+      bad++;
+    }
+  }
+  return bad;
 };

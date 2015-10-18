@@ -5,43 +5,8 @@ body {
   font-size: 14px;
 }
 
-.brand-logo {
-  margin: 0 20px;
-}
-
-.box {
-  display: flex;
-  flex-flow: column;
-  height: 100%;
-  width: 100%;
-  margin: 0;
-}
-
-.box nav {
-  flex: 0 1 auto;
-  margin: 0;
-  z-index: 1500;
-}
-
-nav .switch {
-  margin: 0 20px;
-}
-
-nav .side-nav {
-  z-index: 1500;
-}
-
-#sidenav-overlay {
-  z-index: 99;
-}
-
-.box .map-container {
-  flex: 1 1 auto;
-  display: flex;
-  flex-flow: column;
-  width: 100%;
-  margin: 0;
-  position: relative;
+.header {
+    width: 100%;
 }
 
 .inaccessible {
@@ -59,6 +24,10 @@ nav .side-nav {
   opacity: 0.4;
 }
 
+.mouseover {
+  opacity: 0.8;
+}
+
 .point circle {
   pointer-events: none;
 }
@@ -68,28 +37,17 @@ nav .side-nav {
   width:100%;
 }
 
-#selected,
-#selections,
-#loading:after,
-#about {
-  position:absolute;
-  background-color: #FFF;
-  opacity: 0.8;
-  border-radius: 2px;
-  padding: 10px 10px 0 10px;
-}
 #selected {
+  position:absolute;
   top: 10px;
   right: 10px;
-  height: 28px;
+  width: 400px;
+  heigh: 600px;
+  padding: 16x;
+  transition-duration: 0.3s;
+  transition-property: right, display;
 }
 
-#selected h1 {
-  font-size: 20px;
-  margin: 0px;
-  line-height: 20px;
-  font-weight: bold;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+#selected.hidden {
+  right: -500px;
 }

@@ -63,18 +63,21 @@ AccessMap.prototype._mergeData = function(values) {
 
   var stations = values[1];
 
-  var merged_stations = stations.map(function(d) {
+  var merged_stations = stations.map(function(d, index) {
     d.accessible = d.accessible === "True";
     if (!d.accessible) {
       return d;
     }
     for (var i = 0; i < availabilities.length; i++) {
-      if (d.name === availabilities[i].name) {
+      if (d.name.toLowerCase() === availabilities[i].name.toLowerCase()) {
         d.name = availabilities[i].displayname;
         d.good = availabilities[i].good;
         return d;
       }
     }
+    console.log("Unable to merge station " + d.name);
+    console.log(d);
+    return d;
   });
   return merged_stations;
 };
@@ -176,13 +179,10 @@ AccessMap.prototype.draw = function(points) {
   paths.selectAll("path")
       .on("mouseover",
           function(d, i) {
-            self._selectPoint(d3.select(this), d);
-            d3.select(this).style('fill', d3.rgb(31, 120, 180));
-            svg.select('circle#point-' + i).style('fill', d3.rgb(31, 120, 180))
+            d3.select(this).classed("mouseover", true);
           })
       .on("mouseout", function(d, i) {
-        d3.select(this).style("fill", null);
-        svg.select('circle#point-' + i).style('fill', 'black')
+        d3.select(this).classed("mouseover", false);
       });
 
   points.selectAll("circle")
@@ -199,13 +199,17 @@ AccessMap.prototype.draw = function(points) {
 AccessMap.prototype._selectPoint = function(cell, point) {
   d3.selectAll('.selected').classed('selected', false);
 
+  if (this._lastSelectedPoint == point) {
+    this._lastSelectedPoint = null;
+    d3.select('#selected')
+      .classed('hidden', true);
+      return;
+  }
+
   this._lastSelectedPoint = point;
   cell.classed('selected', true);
 
-  d3.select('#selected h1')
-      .html('')
-      .append('a')
-      .text(point.point.name + ", " + point.point.osm_id)
-      //    .attr('href', point.url)
-      .attr('target', '_blank')
+  d3.select('#selected')
+    .attr("heading", point.point.name)
+    .classed('hidden', false);
 };

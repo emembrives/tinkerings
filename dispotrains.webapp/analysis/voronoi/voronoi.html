@@ -4,88 +4,49 @@
     <meta charset="utf-8">
     <!--Let browser know website is optimized for mobile-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <!--Import Google Icon Font-->
-    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!--Import materialize.css-->
-    <link type="text/css" rel="stylesheet" href="bower_components/Materialize/dist/css/materialize.min.css"  media="screen,projection"/>
 
     <script src='https://api.tiles.mapbox.com/mapbox.js/v2.2.1/mapbox.js'>
     </script>
-    <script src="bower_components/d3/d3.min.js" charset="utf-8">
+    <script src="static/js/bower_components/d3/d3.min.js" charset="utf-8">
     </script>
-    <script src="bower_components/d3.promise/dist/d3.promise.min.js" charset="utf-8">
+    <script src="/static/js/bower_components/d3.promise/dist/d3.promise.min.js" charset="utf-8">
     </script>
     <link href='https://api.tiles.mapbox.com/mapbox.js/v2.2.1/mapbox.css' rel='stylesheet' />
 
-    <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
-    <script type="text/javascript" src="bower_components/Materialize/dist/js/materialize.min.js"></script>
+    <script type="text/javascript" src="/static/js/bower_components/jquery/dist/jquery.min.js"></script>
+
+    <script src="/static/js/bower_components/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="/static/js/bower_components/paper-header-panel/paper-header-panel.html">
+    <link rel="import" href="/static/js/bower_components/paper-icon-button/paper-icon-button.html">
+    <link rel="import" href="/static/js/bower_components/paper-button/paper-button.html">
+    <link rel="import" href="/static/js/bower_components/paper-toolbar/paper-toolbar.html">
+    <link rel="import" href="/static/js/bower_components/paper-dialog/paper-dialog.html">
+    <link rel="import" href="/static/js/bower_components/paper-card/paper-card.html">
+
+    <!-- Iron -->
+    <link rel="import" href="/static/js/bower_components/iron-icons/iron-icons.html">
+
 
     <link href='analysis.css' rel='stylesheet' />
     <title>Accessibilité du réseau de transport en commun d'Ile-de-France</title>
   </head>
-  <body>
-    <div class="box">
-      <nav class="row">
-        <div class="nav-wrapper">
-          <a href="#!" class="brand-logo">Dispotrains - carte de situation</a>
-          <a href="#" data-activates="mobile-nav" class="button-collapse"><i class="material-icons">menu</i></a>
-          <ul class="right hide-on-med-and-down">
-            <li>
-              <div class="switch">
-                Gares
-                <label>
-                  Accessibles
-                  <input type="checkbox" checked>
-                  <span class="lever"></span>
-                  Toutes
-                </label>
-              </div>
-            </li>
-            <li>
-              <div class="switch">
-                <label>
-                  Etat actuel
-                  <input type="checkbox">
-                  <span class="lever"></span>
-                  Statistiques
-                </label>
-              </div>
-            </li>
-          </ul>
-          <ul class="side-nav" id="mobile-nav">
-            <li>
-              <div class="switch">
-                Gares
-                <label>
-                  Accessibles
-                  <input type="checkbox" checked>
-                  <span class="lever"></span>
-                  Toutes
-                </label>
-              </div>
-            </li>
-            <li>
-              <div class="switch">
-                <label>
-                  Etat actuel
-                  <input type="checkbox">
-                  <span class="lever"></span>
-                  Statistiques
-                </label>
-              </div>
-            </li>
-          </ul>
+  <body class="fullbleed vertical layout">
+    <paper-header-panel>
+        <paper-toolbar id="mainheader">
+            <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()" alt="Retour"></paper-icon-button>
+            <span class="header"><h1>Carte d'accessibilité</h1></span>
+            <paper-icon-button id="settings" icon="settings" onclick="document.getElementById('settings-dialog').open()" alt="Options"></paper-icon-button>
+        </paper-toolbar>
+        <div class="map-container row fit">
+          <div class="full-height fit" id='map'></div>
+          <paper-card elevation="1" class="hidden" id="selected">
+            <div class="card-content">Station</div>
+          </paper-card>
         </div>
-      </nav>
-      <div class="map-container row">
-        <div class="full-height" id='map'></div>
-        <div id="selected"><h1></h1></div>
-      </div>
-    </div>
+    </paper-header-panel>
   <script src='map.js'></script>
   <script type="text/javascript">
 $( document ).ready(function(){
-  $(".button-collapse").sideNav();
   var map = new AccessMap(
     document.getElementById('map'),
     document.getElementById('selected'));

@@ -192,6 +192,31 @@ func statusesToEvents(dbStatuses []dataStatus) (map[string][]string, []string) {
 	return events, reports
 }
 
+// VoronoiHandler sends historical data for the Voronoi map.
+func VoronoiHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Methods", "GET")
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type")
+
+	session, err := mgo.Dial("localhost")
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+	cStatistics := session.DB("dispotrains").C("statistics")
+
+	var stats []bson.M
+	if err := cStatistics.Find(nil).All(&stats); err != nil {
+		log.Println(err)
+	}
+	var jsonData []bson.M
+	for _, stat := range stats {
+		delete(stat, "_id")
+		jsonData = append(jsonData, stat)
+	}
+	json.NewEncoder(w).Encode(&jsonData)
+}
+
 func AppHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Add("Access-Control-Allow-Methods", "GET")
@@ -229,6 +254,7 @@ func main() {
 	r.HandleFunc("/gare/{station}", StationHandler)
 	r.HandleFunc("/gare/{station}/stats", StatsHandler)
 	r.HandleFunc("/app/GetStations/", AppHandler)
+	r.HandleFunc("/app/AllStats/", VoronoiHandler)
 	r.PathPrefix("/static/").Handler(CacheRequest(http.StripPrefix("/static/", http.FileServer(http.Dir("static")))))
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":9000", nil))

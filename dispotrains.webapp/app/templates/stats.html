@@ -9,7 +9,7 @@
             <paper-toolbar id="mainheader">
                 <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()" alt="Retour"></paper-icon-button>
                 <span class="header"><h1>Statistiques pour {{ .Station.DisplayName }} - Dispotrains</h1></span>
-                <paper-icon-button id="about" icon="info-outline" onclick="document.getElementById('about-dialog').open()" alt="À propos"></paper-icon-button>
+                <paper-icon-button id="about" icon="help-outline" onclick="document.getElementById('about-dialog').open()" alt="À propos"></paper-icon-button>
             </paper-toolbar>
             <div>
             <paper-material class="card" elevation="1">
@@ -86,7 +86,7 @@ var graph = d3.chart.eventDrops()
         if (datum.name === "Relevés") {
             return 'blue';
         } else {
-            return 'red';   
+            return 'red';
         }
     })
 //    .eventColor(function (datum, index) {

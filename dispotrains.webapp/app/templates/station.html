@@ -10,7 +10,7 @@
                 <paper-icon-button id="back" icon="arrow-back" onclick="window.history.back()" alt="Retour"></paper-icon-button>
                 <span class="header"><h1>{{ .DisplayName }} - Dispotrains</h1></span>
                 <a href="/gare/{{.Name}}/stats"><paper-icon-button id="stats" icon="assessment" alt="Statistiques"></paper-icon-button></a>
-                <paper-icon-button id="about" icon="info-outline" onclick="document.getElementById('about-dialog').open()" alt="À propos"></paper-icon-button>
+                <paper-icon-button id="about" icon="help-outline" onclick="document.getElementById('about-dialog').open()" alt="À propos"></paper-icon-button>
             </paper-toolbar>
             <div class="list">
                 {{ $name := .Name }}
@@ -29,7 +29,7 @@
                         {{.Direction}} ({{.ID}}) - {{.LocalStatusDate}}
                         <span class="elevator-status"><strong>{{.Status.State}}</strong></span>
                     </div>
-                    
+
                     </paper-item-body>
                 </paper-icon-item>
                 {{end}}

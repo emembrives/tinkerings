@@ -44,6 +44,12 @@ type DisplayStation struct {
 
 type LocElevator storage.Elevator
 
+type dataStatus struct {
+	Elevator   string
+	State      string
+	Lastupdate time.Time
+}
+
 func (e *LocElevator) LocalStatusDate() string {
 	return dateformat.FormatLocale(e.Status.LastUpdate, "ddd D MMM à HH:MM", dateformat.French)
 }
@@ -110,48 +116,61 @@ func StatsHandler(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 	defer session.Close()
-	c_stations := session.DB("dispotrains").C("stations")
+	cStations := session.DB("dispotrains").C("stations")
+	cStatuses := session.DB("dispotrains").C("statuses")
+	cStatistics := session.DB("dispotrains").C("statistics")
 
-	c_statuses := session.DB("dispotrains").C("statuses")
 	vars := mux.Vars(req)
 	stationName := vars["station"]
 
 	var station DisplayStation
-	c_stations.Find(bson.M{"name": stationName}).One(&station)
-	elevatorIds := make([]string, 0)
+	cStations.Find(bson.M{"name": stationName}).One(&station)
+	var elevatorIds []string
 	for _, stationElevator := range station.Elevators {
 		elevatorIds = append(elevatorIds, stationElevator.ID)
 	}
-	var dbStatuses []DataStatus
+	var dbStatuses []dataStatus
 
 	index := mgo.Index{
 		Key: []string{"elevator"},
 	}
-	err = c_statuses.EnsureIndex(index)
+	err = cStatuses.EnsureIndex(index)
 	if err != nil {
 		panic(err)
 	}
-	c_statuses.Find(bson.M{"elevator": bson.M{"$in": elevatorIds}}).
+	cStatuses.Find(bson.M{"elevator": bson.M{"$in": elevatorIds}}).
 		Sort("lastupdate").
 		All(&dbStatuses)
 
 	events, reports := statusesToEvents(dbStatuses)
-	stats := statusesToStatistics(events, reports, dbStatuses)
 
-	templateData := struct {
+	var stats storage.StationStats
+	err = cStatistics.Find(bson.M{"name": stationName}).One(&stats)
+	if err != nil {
+		panic(err)
+	}
+
+	type TemplateData struct {
 		Station   DisplayStation
 		Events    map[string][]string
 		Reports   []string
 		StartDate string
 		EndDate   string
-		Stats     StationStats
-	}{station, events, reports, reports[0], reports[len(reports)-1], stats}
+		Stats     storage.StationStats
+	}
+	var templateData TemplateData
+	if len(elevatorIds) != 0 {
+		templateData = TemplateData{
+			station, events, reports, reports[0], reports[len(reports)-1], stats}
+	} else {
+		templateData = TemplateData{station, events, reports, "", "", stats}
+	}
 	if err = stationStatsTmpl.Execute(w, templateData); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func statusesToEvents(dbStatuses []DataStatus) (map[string][]string, []string) {
+func statusesToEvents(dbStatuses []dataStatus) (map[string][]string, []string) {
 	events := make(map[string][]string)
 	reportSet := make(map[string]bool)
 	for _, status := range dbStatuses {
@@ -166,43 +185,11 @@ func statusesToEvents(dbStatuses []DataStatus) (map[string][]string, []string) {
 	}
 
 	reports := make(sort.StringSlice, 0, len(reportSet))
-	for key, _ := range reportSet {
+	for key := range reportSet {
 		reports = append(reports, key)
 	}
 	reports.Sort()
 	return events, reports
-}
-
-func statusesToStatistics(events map[string][]string, reports []string, dbStatuses []DataStatus) StationStats {
-	stats := StationStats{}
-	stats.Reports = len(reports)
-	reportDays := make(map[string]bool)
-	for _, date := range reports {
-		reportDays[date[0:10]] = true
-	}
-	stats.ReportDays = len(reportDays)
-	stats.Elevators = make(map[string]ElevatorStats)
-	malfunctionDays := make(map[string]bool)
-	for elevatorName, statusDates := range events {
-		elevatorStats := ElevatorStats{
-			Name:         elevatorName,
-			Malfunctions: len(statusDates),
-		}
-		stats.Malfunctions += len(statusDates)
-		malfunctionElevatorDays := make(map[string]bool)
-		for _, date := range statusDates {
-			malfunctionDays[date[0:10]] = true
-			malfunctionElevatorDays[date[0:10]] = true
-		}
-		elevatorStats.MalfunctionDays = len(malfunctionElevatorDays)
-		elevatorStats.FunctionDays = len(reportDays) - len(malfunctionElevatorDays)
-		elevatorStats.PercentFunction = float64(elevatorStats.FunctionDays) * 100 / float64(len(reportDays))
-		stats.Elevators[elevatorName] = elevatorStats
-	}
-	stats.MalfunctionDays = len(malfunctionDays)
-	stats.FunctionDays = len(reportDays) - len(malfunctionDays)
-	stats.PercentFunction = float64(stats.FunctionDays) * 100 / float64(len(reportDays))
-	return stats
 }
 
 func AppHandler(w http.ResponseWriter, req *http.Request) {

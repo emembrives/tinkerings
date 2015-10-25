@@ -13,14 +13,15 @@ import (
 type csvStation struct {
 	Name, City          string
 	Latitude, Longitude float64
+	OsmID               string
 }
 
-func newCsvStation(name, city, latitude, longitude string) csvStation {
+func newCsvStation(name, city, latitude, longitude, osmid string) csvStation {
 	convLatitude, err := strconv.ParseFloat(latitude, 64)
 	panicOnError(err)
 	convLongitude, err := strconv.ParseFloat(longitude, 64)
 	panicOnError(err)
-	return csvStation{name, city, convLatitude, convLongitude}
+	return csvStation{name, city, convLatitude, convLongitude, osmid}
 }
 
 func panicOnError(err error) {
@@ -38,7 +39,7 @@ func readCsvFile() (stations []csvStation) {
 	panicOnError(err)
 
 	for _, record := range records[1:] {
-		stations = append(stations, newCsvStation(record[0], record[1], record[2], record[3]))
+		stations = append(stations, newCsvStation(record[0], record[1], record[2], record[3], record[4]))
 	}
 	return stations
 }
@@ -56,5 +57,6 @@ func AddPositionToStations(stations map[string]*storage.Station) {
 
 		stations[strings.ToLower(csvStation.Name)].Position.Latitude = csvStation.Latitude
 		stations[strings.ToLower(csvStation.Name)].Position.Longitude = csvStation.Longitude
+		stations[strings.ToLower(csvStation.Name)].OsmID = csvStation.OsmID
 	}
 }

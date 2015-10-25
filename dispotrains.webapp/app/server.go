@@ -40,6 +40,9 @@ type LineSlice []LineHolder
 type DisplayStation struct {
 	Name        string
 	DisplayName string
+	City        string
+	Position    storage.Coordinates
+	OsmID       string
 	Elevators   []*LocElevator
 	LastUpdate  time.Time
 }

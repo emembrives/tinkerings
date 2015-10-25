@@ -16,6 +16,7 @@ type Station struct {
 	Name         string
 	City         string
 	Position     Coordinates
+	OsmID        string
 	Lines        []*Line
 	Elevators    []*Elevator
 	code         string

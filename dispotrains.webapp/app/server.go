@@ -28,6 +28,7 @@ type Line struct {
 	ID           string
 	GoodStations []*storage.Station `bson:"goodStations"`
 	BadStations  []*storage.Station `bson:"badStations"`
+	LastUpdate   time.Time
 }
 
 type LineHolder struct {
@@ -40,6 +41,7 @@ type DisplayStation struct {
 	Name        string
 	DisplayName string
 	Elevators   []*LocElevator
+	LastUpdate  time.Time
 }
 
 type LocElevator storage.Elevator
@@ -63,6 +65,7 @@ func (ls LineSlice) Lines() []Line {
 }
 
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Cache-control", "public, max-age=86400")
 	session, err := mgo.Dial("localhost")
 	if err != nil {
 		panic(err)
@@ -87,6 +90,7 @@ func LineHandler(w http.ResponseWriter, req *http.Request) {
 
 	var line LineHolder
 	c.Find(bson.M{"_id": lineId}).One(&line)
+	w.Header().Set("Last-Modified", line.Value.LastUpdate.UTC().Format(time.RFC1123))
 	if err = lineTmpl.Execute(w, line.Value); err != nil {
 		log.Fatal(err)
 	}
@@ -105,6 +109,7 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 
 	var station DisplayStation
 	c.Find(bson.M{"name": stationName}).One(&station)
+	w.Header().Set("Last-Modified", station.LastUpdate.UTC().Format(time.RFC1123))
 	if err = stationTmpl.Execute(w, station); err != nil {
 		log.Fatal(err)
 	}

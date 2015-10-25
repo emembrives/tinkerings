@@ -2,13 +2,15 @@ package storage
 
 import (
 	"net/url"
+	"time"
 )
 
 type Line struct {
-	Network  string
-	ID       string
-	code     string
-	stations []*Station
+	Network    string
+	ID         string
+	code       string
+	stations   []*Station
+	LastUpdate time.Time
 }
 
 func (line *Line) attachStation(station *Station) {

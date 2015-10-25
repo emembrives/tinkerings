@@ -3,6 +3,7 @@ package storage
 import (
 	"net/url"
 	"strings"
+	"time"
 )
 
 type Coordinates struct {
@@ -19,6 +20,7 @@ type Station struct {
 	Elevators    []*Elevator
 	code         string
 	HasElevators bool
+	LastUpdate   time.Time
 }
 
 func NewStation(name, city, code string) *Station {

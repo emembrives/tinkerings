@@ -89,6 +89,9 @@ func getStations(line *storage.Line) ([]*storage.Station, error) {
 		}
 		station.AttachLine(line)
 		getElevatorsAndStatus(station)
+		if station.LastUpdate.After(line.LastUpdate) {
+			line.LastUpdate = station.LastUpdate
+		}
 		stations = append(stations, station)
 	}
 	return stations, nil
@@ -144,6 +147,9 @@ func getElevatorsAndStatus(station *storage.Station) error {
 		_, err = elevator.NewStatus(status, date)
 		if err != nil {
 			return err
+		}
+		if elevator.Status.LastUpdate.After(station.LastUpdate) {
+			station.LastUpdate = elevator.Status.LastUpdate
 		}
 	}
 	return nil

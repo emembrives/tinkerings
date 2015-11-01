@@ -13,6 +13,7 @@ function AccessMap(mapEl, captionEl) {
 
 AccessMap._DISPOTRAINS_STATIONS =
     "http://dispotrains.membrives.fr/app/GetStations/";
+AccessMap._DISPOTRAINS_STATS = "http://dispotrains.membrives.fr/app/AllStats/";
 AccessMap._STATIONS_CSV = "full-list.csv";
 
 AccessMap.prototype._setupMapbox = function() {
@@ -54,30 +55,37 @@ AccessMap.prototype._getData = function() {
             }
             return stations;
           });
+  var statisticsPromise = d3.promise.json(AccessMap._DISPOTRAINS_STATS);
   var stationsPromise = d3.promise.csv(AccessMap._STATIONS_CSV);
-  return Promise.all([ availabilityPromise, stationsPromise ])
+  return Promise
+      .all([ availabilityPromise, stationsPromise, statisticsPromise ])
       .then(this._mergeData);
 };
 
 AccessMap.prototype._mergeData = function(values) {
-  var availabilities = values[0];
-
+  var availabilities = {};
+  for (var i = 0; i < values[0].length; i++) {
+    availabilities[values[0][i].name.toLowerCase()] = values[0];
+  }
   var stations = values[1];
+  var statistics = {};
+  for (var i = 0; i < values[2].length; i++) {
+    statistics[values[2][i].name.toLowerCase()] = values[2];
+  }
 
   var merged_stations = stations.map(function(d, index) {
     d.accessible = d.accessible === "True";
     if (!d.accessible) {
       return d;
     }
-    for (var i = 0; i < availabilities.length; i++) {
-      if (d.name.toLowerCase() === availabilities[i].name.toLowerCase()) {
-        d.name = availabilities[i].displayname;
-        d.dispotrains_id = availabilities[i].name;
-        d.good = availabilities[i].good;
-        d.lines = availabilities[i].lines;
-        d.elevators = availabilities[i].elevators;
-        return d;
-      }
+    if (d.name.toLowerCase() in availabilities) {
+      var key = d.name.toLowerCase();
+      d.name = availabilities[key].displayname;
+      d.dispotrains_id = availabilities[key].name;
+      d.good = availabilities[key].good;
+      d.lines = availabilities[key].lines;
+      d.elevators = availabilities[key].elevators;
+      return d;
     }
     console.log("Unable to merge station " + d.name);
     console.log(d);
@@ -186,9 +194,7 @@ AccessMap.prototype.draw = function(points) {
 
   paths.selectAll("path")
       .on("mouseover",
-          function(d, i) {
-            d3.select(this).classed("mouseover", true);
-          })
+          function(d, i) { d3.select(this).classed("mouseover", true); })
       .on("mouseout", function(d, i) {
         d3.select(this).classed("mouseover", false);
       });
@@ -209,16 +215,14 @@ AccessMap.prototype._selectPoint = function(cell, point) {
 
   if (this._lastSelectedPoint == point) {
     this._lastSelectedPoint = null;
-    d3.select('#selected')
-      .classed('hidden', true);
-      return;
+    d3.select('#selected').classed('hidden', true);
+    return;
   }
 
   this._lastSelectedPoint = point;
   cell.classed('selected', true);
 
-  d3.select('#selected')
-    .classed('hidden', false);
+  d3.select('#selected').classed('hidden', false);
   d3.select('#selected #header').text(point.point.name);
 
   if (!point.point.accessible) {
@@ -231,11 +235,12 @@ AccessMap.prototype._selectPoint = function(cell, point) {
   }
   d3.select("#selected #line-count").text(point.point.lines.length);
   d3.select("#selected #lines").text(this._lineStr(point.point.lines));
-  d3.select("#selected #elevator-count").text(point.point.elevators.length)
-  d3.select("#selected #broken-elevator-count")
-    .text(this._elevatorStr(point.point.elevators));
+  d3.select("#selected #elevator-count")
+      .text(point.point.elevators.length)
+          d3.select("#selected #broken-elevator-count")
+      .text(this._elevatorStr(point.point.elevators));
   d3.select("#selected a#dispotrains")
-    .attr("href", "/gare/" + point.point.dispotrains_id);
+      .attr("href", "/gare/" + point.point.dispotrains_id);
 };
 
 AccessMap.prototype._lineStr = function(lines) {

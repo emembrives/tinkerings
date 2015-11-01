@@ -113,11 +113,19 @@ func statusesToStatistics(events map[string][]string, reports []string, dbStatus
 		}
 		elevatorStats.MalfunctionDays = len(malfunctionElevatorDays)
 		elevatorStats.FunctionDays = len(reportDays) - len(malfunctionElevatorDays)
-		elevatorStats.PercentFunction = float64(elevatorStats.FunctionDays) * 100 / float64(len(reportDays))
+		if len(reportDays) != 0 {
+			elevatorStats.PercentFunction = float64(elevatorStats.FunctionDays) * 100 / float64(len(reportDays))
+		} else {
+			elevatorStats.PercentFunction = 100
+		}
 		stats.Elevators[elevatorName] = elevatorStats
 	}
 	stats.MalfunctionDays = len(malfunctionDays)
 	stats.FunctionDays = len(reportDays) - len(malfunctionDays)
-	stats.PercentFunction = float64(stats.FunctionDays) * 100 / float64(len(reportDays))
+	if len(reportDays) != 0 {
+		stats.PercentFunction = float64(stats.FunctionDays) * 100 / float64(len(reportDays))
+	} else {
+		stats.PercentFunction = 100
+	}
 	return stats
 }

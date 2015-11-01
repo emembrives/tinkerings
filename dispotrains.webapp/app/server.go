@@ -213,16 +213,18 @@ func VoronoiHandler(w http.ResponseWriter, req *http.Request) {
 	defer session.Close()
 	cStatistics := session.DB("dispotrains").C("statistics")
 
-	var stats []bson.M
+	var stats []bson.M = make([]bson.M, 0)
 	if err := cStatistics.Find(nil).All(&stats); err != nil {
 		log.Println(err)
 	}
-	var jsonData []bson.M
+	var jsonData []bson.M = make([]bson.M, 0)
 	for _, stat := range stats {
 		delete(stat, "_id")
 		jsonData = append(jsonData, stat)
 	}
-	json.NewEncoder(w).Encode(&jsonData)
+	if err = json.NewEncoder(w).Encode(&jsonData); err != nil {
+		log.Println(err)
+	}
 }
 
 func AppHandler(w http.ResponseWriter, req *http.Request) {

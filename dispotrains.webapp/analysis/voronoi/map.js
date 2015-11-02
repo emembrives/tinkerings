@@ -65,12 +65,12 @@ AccessMap.prototype._getData = function() {
 AccessMap.prototype._mergeData = function(values) {
   var availabilities = {};
   for (var i = 0; i < values[0].length; i++) {
-    availabilities[values[0][i].name.toLowerCase()] = values[0];
+    availabilities[values[0][i].name.toLowerCase()] = values[0][i];
   }
   var stations = values[1];
   var statistics = {};
   for (var i = 0; i < values[2].length; i++) {
-    statistics[values[2][i].name.toLowerCase()] = values[2];
+    statistics[values[2][i].name.toLowerCase()] = values[2][i];
   }
 
   var merged_stations = stations.map(function(d, index) {
@@ -85,6 +85,7 @@ AccessMap.prototype._mergeData = function(values) {
       d.good = availabilities[key].good;
       d.lines = availabilities[key].lines;
       d.elevators = availabilities[key].elevators;
+      d.percentfunction = statistics[key].percentfunction;
       return d;
     }
     console.log("Unable to merge station " + d.name);
@@ -239,6 +240,7 @@ AccessMap.prototype._selectPoint = function(cell, point) {
       .text(point.point.elevators.length)
           d3.select("#selected #broken-elevator-count")
       .text(this._elevatorStr(point.point.elevators));
+  d3.select("#selected #function").text(point.point.percentfunction.toFixed(1));
   d3.select("#selected a#dispotrains")
       .attr("href", "/gare/" + point.point.dispotrains_id);
 };

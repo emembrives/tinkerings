@@ -25,6 +25,7 @@ func main() {
 	cStations := session.DB("dispotrains").C("stations")
 	cStatuses := session.DB("dispotrains").C("statuses")
 	cStatistics := session.DB("dispotrains").C("statistics")
+	cStatistics.DropCollection()
 	err = cStatuses.EnsureIndexKey("elevator")
 	if err != nil {
 		panic(err)
@@ -116,7 +117,7 @@ func statusesToStatistics(events map[string][]string, reports []string, dbStatus
 		if len(reportDays) != 0 {
 			elevatorStats.PercentFunction = float64(elevatorStats.FunctionDays) * 100 / float64(len(reportDays))
 		} else {
-			elevatorStats.PercentFunction = 100
+			elevatorStats.PercentFunction = 100.0
 		}
 		stats.Elevators[elevatorName] = elevatorStats
 	}
@@ -125,7 +126,7 @@ func statusesToStatistics(events map[string][]string, reports []string, dbStatus
 	if len(reportDays) != 0 {
 		stats.PercentFunction = float64(stats.FunctionDays) * 100 / float64(len(reportDays))
 	} else {
-		stats.PercentFunction = 100
+		stats.PercentFunction = 100.0
 	}
 	return stats
 }

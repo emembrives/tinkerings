@@ -1,5 +1,6 @@
 function AccessMap(mapEl, captionEl) {
   this.accessible = false;
+  this.statistics = false;
   this._mapEl = mapEl;
   this._captionEl = captionEl;
   this._points = [];
@@ -177,21 +178,26 @@ AccessMap.prototype.draw = function(points) {
   var datapointFunc = function(datapoint) {
     return "M" + datapoint.join(",") + "Z";
   };
-  paths.selectAll("path")
+  var areaPath = paths.selectAll("path")
       .data(this._d3Voronoi(filteredPoints))
       .enter()
-      .append("svg:path")
-      .attr("d", datapointFunc)
+      .append("svg:path");
+  areaPath.attr("d", datapointFunc)
       .attr("id", function(d, i) { return "path-" + i; })
       .attr("clip-path", function(d, i) { return "url(#clip-" + i + ")"; })
       .style("stroke", d3.rgb(50, 50, 50))
       .on('click', function(d) { self._selectPoint(d3.select(this), d); })
       .classed("selected", function(d) { return this._lastSelectedPoint == d })
       .classed("inaccessible", function(d) { return !d.point.accessible; })
-      .classed("malfunction",
-               function(d) { return d.point.accessible && !d.point.good; })
-      .classed(
-          "ok", function(d) { return d.point.accessible && d.point.good; });
+      .classed("malfunction", function(d) { return d.point.accessible && (
+            !d.point.good || self.statistics); })
+      .classed("ok", function(d) {
+        return d.point.accessible && d.point.good && !self.statistics; });
+  if (self.statistics) {
+    areaPath.style("opacity", function(d) {
+      return (100 - d.point.percentfunction)/100;
+    });
+  }
 
   paths.selectAll("path")
       .on("mouseover",

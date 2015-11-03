@@ -75,7 +75,7 @@
                     <dd id="lines"></dd>
                     <dt><span id="elevator-count"></span> ascenseur(s)</dt>
                     <dd><span id="broken-elevator-count"></span> ascenseur(s) hors service</dd>
-                    <dt>Taux de fonctionnement</dt>
+                    <dt>Taux de fonctionnement plein</dt>
                     <dd><span id="function"></span> %</dd>
                   </dl>
                 </div>
@@ -97,6 +97,10 @@ $( document ).ready(function(){
   map.loadAndDraw();
   $("#toggle-accessible").on("change", function() {
     map.accessible = $("#toggle-accessible").attr('checked') === "checked";
+    map.loadAndDraw();
+  });
+  $("#toggle-statistics").on("change", function() {
+    map.statistics = $("#toggle-statistics").attr('checked') === "checked";
     map.loadAndDraw();
   });
   $("#close-btn").click(function() {

@@ -7,7 +7,7 @@
 
     <script src='https://api.tiles.mapbox.com/mapbox.js/v2.2.1/mapbox.js'>
     </script>
-    <script src="static/js/bower_components/d3/d3.min.js" charset="utf-8">
+    <script src="/static/js/bower_components/d3/d3.min.js" charset="utf-8">
     </script>
     <script src="/static/js/bower_components/d3.promise/dist/d3.promise.min.js" charset="utf-8">
     </script>
@@ -32,7 +32,7 @@
     <link rel="import" href="/static/js/bower_components/iron-icons/maps-icons.html">
 
 
-    <link href='analysis.css' rel='stylesheet' />
+    <link href='/static/css/map.css' rel='stylesheet' />
     <title>Accessibilité du réseau de transport en commun d'Ile-de-France</title>
   </head>
   <body class="fullbleed vertical layout">
@@ -88,7 +88,7 @@
           </div>
         </paper-drawer-panel>
     </paper-header-panel>
-  <script src='map.js'></script>
+  <script src='/static/js/map.js'></script>
   <script type="text/javascript">
 $( document ).ready(function(){
   var map = new AccessMap(

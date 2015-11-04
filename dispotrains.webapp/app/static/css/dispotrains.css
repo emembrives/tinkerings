@@ -1,10 +1,15 @@
 html body .ui-btn.ui-btn-b.ui-custom-alert, html body .ui-body-b.ui-custom-alert {
-  background-color: #FFD060;   
+  background-color: #FFD060;
 }
 
 body {
     font-family: Roboto, Noto, sans-serif;
     color: #212121;
+}
+
+h1 {
+  font-weight: normal;
+  font-size: 20px;
 }
 
 a {
@@ -108,4 +113,3 @@ dl {
     opacity: 0.1;
     transform-origin: center;
 }
-

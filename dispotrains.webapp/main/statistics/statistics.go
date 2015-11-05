@@ -25,7 +25,7 @@ func main() {
 	cStations := session.DB("dispotrains").C("stations")
 	cStatuses := session.DB("dispotrains").C("statuses")
 	cStatistics := session.DB("dispotrains").C("statistics")
-	cStatistics.DropCollection()
+
 	err = cStatuses.EnsureIndexKey("elevator")
 	if err != nil {
 		panic(err)

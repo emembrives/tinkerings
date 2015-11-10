@@ -38,13 +38,14 @@ type LineHolder struct {
 type LineSlice []LineHolder
 
 type DisplayStation struct {
-	Name        string
-	DisplayName string
-	City        string
-	Position    storage.Coordinates
-	OsmID       string
-	Elevators   []*LocElevator
-	LastUpdate  time.Time
+	Name         string
+	DisplayName  string
+	City         string
+	Position     storage.Coordinates
+	OsmID        string
+	Elevators    []*LocElevator
+	LastUpdate   time.Time
+	BadElevators int
 }
 
 type LocElevator storage.Elevator
@@ -112,6 +113,11 @@ func StationHandler(w http.ResponseWriter, req *http.Request) {
 
 	var station DisplayStation
 	c.Find(bson.M{"name": stationName}).One(&station)
+	for _, elevator := range station.Elevators {
+		if elevator.Status.State != "Disponible" {
+			station.BadElevators++
+		}
+	}
 	w.Header().Set("Last-Modified", station.LastUpdate.UTC().Format(time.RFC1123))
 	if err = stationTmpl.Execute(w, station); err != nil {
 		log.Fatal(err)

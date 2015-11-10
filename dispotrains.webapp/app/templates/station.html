@@ -2,7 +2,7 @@
     <head>
     <title>{{ .DisplayName }} - Dispotrains</title>
     {{template "header.html"}}
-		<meta name="description" content="État des équipements d'accessibilité aux usagers à mobilité réduite à {{ .DisplayName }} mis-à-jour en temps-réel"/>
+		<meta name="description" content="État des équipements d'accessibilité à {{ .DisplayName }} mis-à-jour à {{.LastUpdate.Format "15:04"}} : {{if eq .BadElevators 0}}tous en fonctionnement{{else if eq .BadElevators 1}}1 ascenseur indisponible{{else}}{{.BadElevators}} ascenseurs indisponibles{{end}}."/>
     </head>
     <body class="fullbleed vertical layout" itemscope itemtype="https://schema.org/TrainStation">
         <paper-header-panel>

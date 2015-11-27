@@ -1,15 +1,16 @@
 package fr.membrives.dispotrains;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 import fr.membrives.dispotrains.data.Elevator;
 import fr.membrives.dispotrains.data.Line;
 import fr.membrives.dispotrains.data.Station;
@@ -20,18 +21,9 @@ import fr.membrives.dispotrains.data.Station;
 public class DataSource {
     private static final String TAG = "f.m.d.DataSource";
     private final DatabaseHelper mHelper;
-    private SQLiteDatabase mDatabase;
 
     public DataSource(Context context) {
-        this.mHelper = new DatabaseHelper(context);
-    }
-
-    public void open() throws SQLException {
-        mDatabase = mHelper.getWritableDatabase();
-    }
-
-    public void close() {
-        mHelper.close();
+        this.mHelper = DatabaseHelper.getInstance(context);
     }
 
     private Line cursorToLine(Cursor cursor) {
@@ -88,13 +80,7 @@ public class DataSource {
     }
 
     public Set<Elevator> getElevatorsPerStation(Station station) {
-        Cursor cursor = mDatabase.query(DatabaseHelper.TABLE_ELEVATORS, new String[] {
-                DatabaseHelper.COLUMN_ELEVATOR_ID, DatabaseHelper.COLUMN_ELEVATOR_SITUATION,
-                DatabaseHelper.COLUMN_ELEVATOR_DIRECTION,
-                DatabaseHelper.COLUMN_ELEVATOR_STATUS_DESC,
-                DatabaseHelper.COLUMN_ELEVATOR_STATUS_TIME },
-                new StringBuilder().append(DatabaseHelper.COLUMN_ELEVATOR_STATION).append("=?")
-                        .toString(), new String[] { station.getName() }, null, null, null);
+        Cursor cursor = mHelper.getElevators(station.getName());
 
         Set<Elevator> elevators = new HashSet<Elevator>();
         cursor.moveToFirst();
@@ -110,69 +96,31 @@ public class DataSource {
 
     public boolean addLineToDatabase(Line line) {
         Log.d(TAG, "addLineToDatabase: " + line.getId());
-        ContentValues values = new ContentValues();
-        values.put(DatabaseHelper.COLUMN_LINE_ID, line.getId());
-        values.put(DatabaseHelper.COLUMN_LINE_NETWORK, line.getNetwork());
-        return mDatabase.insertWithOnConflict(DatabaseHelper.TABLE_LINES, null, values,
-                SQLiteDatabase.CONFLICT_REPLACE) != -1;
+        return mHelper.addLineToDatabase(line.getId(), line.getNetwork());
     }
 
     public boolean deleteLineFromDatabase(Line line) {
         Log.d(TAG, "deleteLineFromDatabase: " + line.getId());
-        return mDatabase.delete(DatabaseHelper.TABLE_LINES, DatabaseHelper.COLUMN_LINE_ID + " =?",
-                new String[] { line.getId() }) != 0;
+        return mHelper.deleteLineFromDatabase(line.getId());
     }
 
     public boolean addStationToDatabase(Station station) {
         Log.d(TAG, "addStationToDatabase: " + station.getName());
-        ContentValues values = new ContentValues();
-        values.put(DatabaseHelper.COLUMN_STATION_NAME, station.getName());
-        values.put(DatabaseHelper.COLUMN_STATION_DISPLAY, station.getDisplay());
-        values.put(DatabaseHelper.COLUMN_STATION_WORKING, station.getWorking() ? 1 : 0);
-        if (mDatabase.insertWithOnConflict(DatabaseHelper.TABLE_STATIONS, null, values,
-                SQLiteDatabase.CONFLICT_REPLACE) == -1) {
-            return false;
-        }
-        for (Line line : station.getLines()) {
-            values = new ContentValues();
-            values.put(DatabaseHelper.COLUMN_STATION_NAME, station.getName());
-            values.put(DatabaseHelper.COLUMN_LINE_ID, line.getId());
-            if (mDatabase.insertWithOnConflict(DatabaseHelper.TABLE_LINES_STATIONS, null, values,
-                    SQLiteDatabase.CONFLICT_REPLACE) == -1) {
-                return false;
-            }
-        }
-        return true;
+        return mHelper.addStationToDatabase(station);
     }
 
     public boolean deleteStationFromDatabase(Station station) {
         Log.d(TAG, "deleteStationFromDatabase: " + station.getName());
-        mDatabase.delete(DatabaseHelper.TABLE_LINES_STATIONS, DatabaseHelper.COLUMN_STATION_NAME
-                + " =?", new String[] { station.getName() });
-        mDatabase.delete(DatabaseHelper.TABLE_STATIONS, DatabaseHelper.COLUMN_STATION_NAME + " =?",
-                new String[] { station.getName() });
-        return true;
+        return mHelper.deleteStationFromDatabase(station.getName());
     }
 
     public boolean addElevatorToDatabase(Elevator elevator) {
         Log.d(TAG, "addElevatorToDatabase: " + elevator.getId());
-        ContentValues values = new ContentValues();
-        values.put(DatabaseHelper.COLUMN_ELEVATOR_ID, elevator.getId());
-        values.put(DatabaseHelper.COLUMN_ELEVATOR_DIRECTION, elevator.getDirection());
-        values.put(DatabaseHelper.COLUMN_ELEVATOR_SITUATION, elevator.getSituation());
-        values.put(DatabaseHelper.COLUMN_ELEVATOR_STATUS_DESC, elevator.getStatusDescription());
-        values.put(DatabaseHelper.COLUMN_ELEVATOR_STATUS_TIME, elevator.getStatusDate().getTime());
-        values.put(DatabaseHelper.COLUMN_ELEVATOR_STATION, elevator.getStation().getName());
-        if (mDatabase.insertWithOnConflict(DatabaseHelper.TABLE_ELEVATORS, null, values,
-                SQLiteDatabase.CONFLICT_REPLACE) == -1) {
-            return false;
-        }
-        return true;
+        return mHelper.addElevatorToDatabase(elevator);
     }
 
     public boolean deleteElevatorFromDatabase(Elevator elevator) {
         Log.d(TAG, "deleteElevatorFromDatabase: " + elevator.getId());
-        return mDatabase.delete(DatabaseHelper.TABLE_ELEVATORS, DatabaseHelper.COLUMN_ELEVATOR_ID
-                + " =?", new String[] { elevator.getId() }) != 0;
+        return mHelper.deleteElevatorFromDatabase(elevator.getId());
     }
 }

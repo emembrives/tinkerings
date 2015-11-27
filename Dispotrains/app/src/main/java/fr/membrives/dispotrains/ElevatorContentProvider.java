@@ -39,7 +39,7 @@ public class ElevatorContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        mHelper = new DatabaseHelper(getContext());
+        mHelper = DatabaseHelper.getInstance(getContext());
         return true;
     }
 

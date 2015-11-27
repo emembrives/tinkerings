@@ -23,7 +23,6 @@ public class StationDetailActivity extends ListActivity {
         setContentView(R.layout.station_detail_activity);
         // Create the dummy account
         mDataSource = new DataSource(this);
-        mDataSource.open();
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
     }

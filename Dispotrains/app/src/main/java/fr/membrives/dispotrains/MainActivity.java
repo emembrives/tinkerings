@@ -1,15 +1,7 @@
 package fr.membrives.dispotrains;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,39 +10,62 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import fr.membrives.dispotrains.adapters.LineAdapter;
 import fr.membrives.dispotrains.data.Line;
 
-public class MainActivity extends ListActivity {
-    private static final String TAG = "f.m.d.MainActivity";
-    // The authority for the sync adapter's content provider
-    public static final String AUTHORITY = "fr.membrives.dispotrains";
-    // An account type, in the form of a domain name
-    public static final String ACCOUNT_TYPE = "fr.membrives.dispotrains";
-    // The account name
-    public static final String ACCOUNT = "Dispotrains";
-    // Instance fields
-    private Account mAccount;
+public class MainActivity extends ListeningActivity {
 
     private DataSource mDataSource;
+    volatile private List<Line> mLines;
+    private LineAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // Create the dummy account
-        mAccount = CreateSyncAccount(this);
         // Turn on automatic syncing for the default account and authority
         ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
         ContentResolver.addPeriodicSync(mAccount, AUTHORITY, new Bundle(), 1800);
-        ContentResolver.requestSync(mAccount, AUTHORITY, new Bundle());
+
+        Bundle settingsBundle = new Bundle();
+        settingsBundle.putBoolean(
+                ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        settingsBundle.putBoolean(
+                ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        Log.d("MainActivity", "RequestSync " + mAccount.toString());
+        ContentResolver.requestSync(mAccount, AUTHORITY, settingsBundle);
 
         mDataSource = new DataSource(this);
-        mDataSource.open();
 
-        List<Line> lines = new ArrayList<Line>(mDataSource.getAllLines());
+        mLines = new ArrayList<Line>(mDataSource.getAllLines());
+        Collections.sort(mLines);
+        mAdapter = new LineAdapter(this, mLines);
+        setListAdapter(mAdapter);
+    }
+
+    @Override
+    protected void updateIsSyncing(final boolean isSyncing) {
+        final List<Line> lines = new ArrayList<Line>(mDataSource.getAllLines());
         Collections.sort(lines);
-        setListAdapter(new LineAdapter(this, lines));
+        runOnUiThread(new Runnable() {
+            public void run() {
+                mLines.clear();
+                mLines.addAll(lines);
+                mAdapter.notifyDataSetChanged();
+                ProgressBar progressBar = ((ProgressBar) findViewById(R.id.loader));
+                if (isSyncing) {
+                    progressBar.setVisibility(View.VISIBLE);
+                } else {
+                    progressBar.setVisibility(View.GONE);
+                }
+            }
+        });
     }
 
     @Override
@@ -94,28 +109,5 @@ public class MainActivity extends ListActivity {
         builder.setPositiveButton("OK", null);
         builder.create();
         builder.show();
-    }
-
-    /**
-     * Create a new dummy account for the sync adapter
-     *
-     * @param context
-     *            The application context
-     */
-    public static Account CreateSyncAccount(Context context) {
-        // Create the account type and default account
-        Account newAccount = new Account(ACCOUNT, ACCOUNT_TYPE);
-        // Get an instance of the Android account manager
-        AccountManager accountManager = (AccountManager) context.getSystemService(ACCOUNT_SERVICE);
-        /*
-         * Add the account and account type, no password or user data If successful, return the
-         * Account object, otherwise report an error.
-         */
-        if (accountManager.addAccountExplicitly(newAccount, null, null)) {
-            Log.d(TAG, "Account added.");
-        } else {
-            Log.d(TAG, "Account already present.");
-        }
-        return newAccount;
     }
 }

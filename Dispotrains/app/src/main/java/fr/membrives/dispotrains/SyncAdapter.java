@@ -37,7 +37,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     private static final String TAG = "f.m.d.SyncAdapter";
     // Global variables
     // Define a variable to contain a content resolver instance
-    private final ContentResolver mContentResolver;
     private final DataSource mSource;
 
     /**
@@ -48,7 +47,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         /*
          * If your app uses a content resolver, get an instance of it from the incoming Context
          */
-        mContentResolver = context.getContentResolver();
         mSource = new DataSource(context);
     }
 
@@ -61,7 +59,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         /*
          * If your app uses a content resolver, get an instance of it from the incoming Context
          */
-        mContentResolver = context.getContentResolver();
         mSource = new DataSource(context);
     }
 
@@ -69,7 +66,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public void onPerformSync(Account account, Bundle extras, String authority,
             ContentProviderClient provider, SyncResult syncResult) {
         Log.d(TAG, "onPerformSync");
-        mSource.open();
         Multimap<Line, Station> lines = HashMultimap.create();
         try {
             URL stationsURL = new URL("http://dispotrains.membrives.fr/app/GetStations/");

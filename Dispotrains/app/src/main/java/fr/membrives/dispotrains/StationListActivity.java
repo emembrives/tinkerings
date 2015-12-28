@@ -2,9 +2,9 @@ package fr.membrives.dispotrains;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +24,7 @@ public class StationListActivity extends ListeningActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.station_list_activity);
+        ((SwipeRefreshLayout) findViewById(R.id.swipe_refresh)).setOnRefreshListener(this);
         mDataSource = new DataSource(this);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
@@ -47,12 +48,6 @@ public class StationListActivity extends ListeningActivity {
                 mStations.clear();
                 mStations.addAll(stations);
                 mAdapter.notifyDataSetChanged();
-                ProgressBar progressBar = ((ProgressBar) findViewById(R.id.loader));
-                if (isSyncing) {
-                    progressBar.setVisibility(View.VISIBLE);
-                } else {
-                    progressBar.setVisibility(View.GONE);
-                }
             }
         });
     }

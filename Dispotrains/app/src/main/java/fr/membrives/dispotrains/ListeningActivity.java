@@ -2,17 +2,25 @@ package fr.membrives.dispotrains;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SyncStatusObserver;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 
 /**
  * Activity that listens to changes in a ContentResolver.
  */
-abstract public class ListeningActivity extends ListActivity implements SyncStatusObserver {
+abstract public class ListeningActivity extends ListActivity
+        implements SyncStatusObserver, OnRefreshListener {
     public static final String AUTHORITY = "fr.membrives.dispotrains";
     // An account type, in the form of a domain name
     public static final String ACCOUNT_TYPE = "fr.membrives.dispotrains";
@@ -61,13 +69,20 @@ abstract public class ListeningActivity extends ListActivity implements SyncStat
     @Override
     protected void onResume() {
         super.onResume();
-        mContentProviderHandle = ContentResolver.addStatusChangeListener(
-                ContentResolver.SYNC_OBSERVER_TYPE_ACTIVE, this);
+        mContentProviderHandle = ContentResolver
+                .addStatusChangeListener(ContentResolver.SYNC_OBSERVER_TYPE_ACTIVE, this);
         onStatusChanged(0);
     }
 
     public void onStatusChanged(int which) {
-        updateIsSyncing(ContentResolver.isSyncActive(mAccount, AUTHORITY));
+        final boolean isSyncing = ContentResolver.isSyncActive(mAccount, AUTHORITY);
+        updateIsSyncing(isSyncing);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ((SwipeRefreshLayout) findViewById(R.id.swipe_refresh)).setRefreshing(isSyncing);
+            }
+        });
     }
 
     /**
@@ -76,5 +91,62 @@ abstract public class ListeningActivity extends ListActivity implements SyncStat
      * @param isSyncing whether the syncing is in progress
      */
     abstract protected void updateIsSyncing(final boolean isSyncing);
+
+    @Override
+    public void onRefresh() {
+        if (!ContentResolver.isSyncActive(mAccount, AUTHORITY)) {
+            doRefresh();
+        }
+    }
+
+    protected void doRefresh() {
+        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
+        ContentResolver.addPeriodicSync(mAccount, AUTHORITY, new Bundle(), 1800);
+        Bundle settingsBundle = new Bundle();
+        settingsBundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        settingsBundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        ContentResolver.requestSync(mAccount, AUTHORITY, settingsBundle);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_about:
+                showAbout();
+            case R.id.action_refresh:
+                refresh();
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void refresh() {
+        doRefresh();
+    }
+
+    private void showAbout() {
+        // Inflate the about message contents
+        View messageView = getLayoutInflater().inflate(R.layout.about, null, false);
+
+        // When linking text, force to always use default color. This works
+        // around a pressed color state bug.
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setIcon(R.drawable.ic_launcher);
+        builder.setTitle(R.string.app_name);
+        builder.setView(messageView);
+        builder.setCancelable(true);
+        builder.setPositiveButton("OK", null);
+        builder.create();
+        builder.show();
+    }
 
 }

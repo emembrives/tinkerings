@@ -6,6 +6,8 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.View;
 import android.widget.ListView;
 
+import com.google.android.gms.analytics.HitBuilders;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +27,6 @@ public class MainActivity extends ListeningActivity {
         setContentView(R.layout.activity_main);
         // Turn on automatic syncing for the default account and authority
         ((SwipeRefreshLayout) findViewById(R.id.swipe_refresh)).setOnRefreshListener(this);
-        doRefresh();
 
         mDataSource = new DataSource(this);
 
@@ -33,6 +34,16 @@ public class MainActivity extends ListeningActivity {
         Collections.sort(mLines);
         mAdapter = new LineAdapter(this, mLines);
         setListAdapter(mAdapter);
+
+        doRefresh();
+        onStatusChanged(0);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mTracker.setScreenName("LineList");
+        mTracker.send(new HitBuilders.ScreenViewBuilder().build());
     }
 
     @Override

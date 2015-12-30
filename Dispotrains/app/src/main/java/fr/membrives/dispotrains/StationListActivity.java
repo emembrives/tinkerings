@@ -6,6 +6,8 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.View;
 import android.widget.ListView;
 
+import com.google.android.gms.analytics.HitBuilders;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +39,14 @@ public class StationListActivity extends ListeningActivity {
         setListAdapter(mAdapter);
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mTracker.setScreenName("StationList~" + mLine.getNetwork() + "/" + mLine.getId());
+        mTracker.send(new HitBuilders.ScreenViewBuilder().build());
+    }
+
 
     @Override
     protected void updateIsSyncing(final boolean isSyncing) {

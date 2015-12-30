@@ -10,12 +10,17 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v4.app.TaskStackBuilder;
 import android.view.MenuItem;
+
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
+
 import fr.membrives.dispotrains.adapters.ElevatorAdapter;
 import fr.membrives.dispotrains.data.Elevator;
 import fr.membrives.dispotrains.data.Station;
 
 public class StationDetailActivity extends ListActivity {
     private DataSource mDataSource;
+    private Tracker mTracker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +30,9 @@ public class StationDetailActivity extends ListActivity {
         mDataSource = new DataSource(this);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
+        
+        DispotrainsApplication application = (DispotrainsApplication) getApplication();
+        mTracker = application.getDefaultTracker();
     }
 
     @Override
@@ -38,6 +46,9 @@ public class StationDetailActivity extends ListActivity {
                 mDataSource.getElevatorsPerStation(station));
         Collections.sort(elevators);
         setListAdapter(new ElevatorAdapter(this, elevators));
+
+        mTracker.setScreenName("StationDetail~" + station.getName());
+        mTracker.send(new HitBuilders.ScreenViewBuilder().build());
     }
 
     @Override

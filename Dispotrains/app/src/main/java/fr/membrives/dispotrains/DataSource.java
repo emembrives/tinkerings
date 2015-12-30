@@ -16,10 +16,9 @@ import fr.membrives.dispotrains.data.Line;
 import fr.membrives.dispotrains.data.Station;
 
 /**
- * Created by etienne on 04/10/14.
+ * Wrapper to the local database
  */
 public class DataSource {
-    private static final String TAG = "f.m.d.DataSource";
     private final DatabaseHelper mHelper;
 
     public DataSource(Context context) {
@@ -95,32 +94,26 @@ public class DataSource {
     }
 
     public boolean addLineToDatabase(Line line) {
-        Log.d(TAG, "addLineToDatabase: " + line.getId());
         return mHelper.addLineToDatabase(line.getId(), line.getNetwork());
     }
 
     public boolean deleteLineFromDatabase(Line line) {
-        Log.d(TAG, "deleteLineFromDatabase: " + line.getId());
         return mHelper.deleteLineFromDatabase(line.getId());
     }
 
     public boolean addStationToDatabase(Station station) {
-        Log.d(TAG, "addStationToDatabase: " + station.getName());
         return mHelper.addStationToDatabase(station);
     }
 
     public boolean deleteStationFromDatabase(Station station) {
-        Log.d(TAG, "deleteStationFromDatabase: " + station.getName());
         return mHelper.deleteStationFromDatabase(station.getName());
     }
 
     public boolean addElevatorToDatabase(Elevator elevator) {
-        Log.d(TAG, "addElevatorToDatabase: " + elevator.getId());
         return mHelper.addElevatorToDatabase(elevator);
     }
 
     public boolean deleteElevatorFromDatabase(Elevator elevator) {
-        Log.d(TAG, "deleteElevatorFromDatabase: " + elevator.getId());
         return mHelper.deleteElevatorFromDatabase(elevator.getId());
     }
 }

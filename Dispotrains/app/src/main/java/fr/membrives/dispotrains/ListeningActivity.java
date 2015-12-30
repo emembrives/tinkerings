@@ -16,6 +16,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
+
 /**
  * Activity that listens to changes in a ContentResolver.
  */
@@ -29,6 +32,8 @@ abstract public class ListeningActivity extends ListActivity
     private static final String TAG = "f.m.d.ListeningActivity";
     // Dispotrains account for synchronization.
     protected Account mAccount;
+    protected Tracker mTracker;
+
     private Object mContentProviderHandle;
 
     /**
@@ -58,6 +63,8 @@ abstract public class ListeningActivity extends ListActivity
         super.onCreate(savedInstanceBundle);
         // Create the dummy account
         mAccount = CreateSyncAccount(this);
+        DispotrainsApplication application = (DispotrainsApplication) getApplication();
+        mTracker = application.getDefaultTracker();
     }
 
     @Override
@@ -94,6 +101,8 @@ abstract public class ListeningActivity extends ListActivity
 
     @Override
     public void onRefresh() {
+        mTracker.send(
+                new HitBuilders.EventBuilder().setCategory("Action").setAction("Refresh").build());
         if (!ContentResolver.isSyncActive(mAccount, AUTHORITY)) {
             doRefresh();
         }

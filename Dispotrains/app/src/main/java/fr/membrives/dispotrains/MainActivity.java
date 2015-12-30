@@ -1,11 +1,14 @@
 package fr.membrives.dispotrains;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.View;
 import android.widget.ListView;
 
+import com.github.amlcurran.showcaseview.OnShowcaseEventListener;
+import com.github.amlcurran.showcaseview.ShowcaseView;
 import com.google.android.gms.analytics.HitBuilders;
 
 import java.util.ArrayList;
@@ -20,6 +23,7 @@ public class MainActivity extends ListeningActivity {
     private DataSource mDataSource;
     volatile private List<Line> mLines;
     private LineAdapter mAdapter;
+    private boolean mShowcaseShown = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +41,41 @@ public class MainActivity extends ListeningActivity {
 
         doRefresh();
         onStatusChanged(0);
+
+        switch (ApplicationStatusFinder.checkAppStart(MainActivity.this)) {
+            case FIRST_TIME:
+                new ShowcaseView.Builder(MainActivity.this).withMaterialShowcase()
+                        .setStyle(R.style.ShowcaseView_Light)
+                        .setContentTitle(R.string.tutorial_title)
+                        .setContentText(R.string.tutorial_content)
+                        .hideOnTouchOutside()
+                        .setShowcaseEventListener(new OnShowcaseEventListener() {
+                            @Override
+                            public void onShowcaseViewHide(ShowcaseView showcaseView) {}
+
+                            @Override
+                            public void onShowcaseViewDidHide(ShowcaseView showcaseView) {
+                                mShowcaseShown = false;
+                                AsyncTask.execute(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        MainActivity.this.updateOnSync();
+
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onShowcaseViewShow(ShowcaseView showcaseView) {
+                                mShowcaseShown = true;
+                            }
+                        }).build();
+                break;
+            case FIRST_TIME_VERSION:
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
@@ -47,16 +86,19 @@ public class MainActivity extends ListeningActivity {
     }
 
     @Override
-    protected void updateIsSyncing(final boolean isSyncing) {
+    public void updateOnSync() {
         final List<Line> lines = new ArrayList<Line>(mDataSource.getAllLines());
         Collections.sort(lines);
-        runOnUiThread(new Runnable() {
-            public void run() {
-                mLines.clear();
-                mLines.addAll(lines);
-                mAdapter.notifyDataSetChanged();
-            }
-        });
+        if (!mShowcaseShown) {
+            // Do not display anything while we are showing the tutorial.
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    mLines.clear();
+                    mLines.addAll(lines);
+                    mAdapter.notifyDataSetChanged();
+                }
+            });
+        }
     }
 
     @Override

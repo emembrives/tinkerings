@@ -65,7 +65,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority,
             ContentProviderClient provider, SyncResult syncResult) {
-        Log.d(TAG, "onPerformSync");
         Multimap<Line, Station> lines = HashMultimap.create();
         try {
             URL stationsURL = new URL("http://dispotrains.membrives.fr/app/GetStations/");
@@ -94,7 +93,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private void synchronizeWithDatabase(Set<Line> lines, SyncResult syncResult) {
-        Log.d(TAG, "synchronizeWithDatabase");
         Set<Line> oldLines = mSource.getAllLines();
         int nbLines = 0, nbStations = 0, nbElevators = 0;
         for (Line line : lines) {
@@ -118,9 +116,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     syncResult.stats.numInserts++;
                     syncResult.stats.numEntries++;
                 } else {
-                    if (station.getName().equalsIgnoreCase("Auber")) {
-                        Log.d(TAG, "Auber station");
-                    }
                     Station oldStation = oldStations.get(station);
                     if (station.getWorking() != oldStation.getWorking()) {
                         mSource.addStationToDatabase(station);

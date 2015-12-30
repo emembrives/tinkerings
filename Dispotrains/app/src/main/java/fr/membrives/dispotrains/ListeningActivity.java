@@ -83,7 +83,7 @@ abstract public class ListeningActivity extends ListActivity
 
     public void onStatusChanged(int which) {
         final boolean isSyncing = ContentResolver.isSyncActive(mAccount, AUTHORITY);
-        updateIsSyncing(isSyncing);
+        updateOnSync();
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -94,10 +94,8 @@ abstract public class ListeningActivity extends ListActivity
 
     /**
      * Runs on background thread.
-     *
-     * @param isSyncing whether the syncing is in progress
      */
-    abstract protected void updateIsSyncing(final boolean isSyncing);
+    abstract protected void updateOnSync();
 
     @Override
     public void onRefresh() {

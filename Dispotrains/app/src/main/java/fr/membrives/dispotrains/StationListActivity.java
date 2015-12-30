@@ -49,7 +49,7 @@ public class StationListActivity extends ListeningActivity {
 
 
     @Override
-    protected void updateIsSyncing(final boolean isSyncing) {
+    protected void updateOnSync() {
         final List<Station> stations =
                 new ArrayList<Station>(mDataSource.getStationsPerLine(mLine));
         Collections.sort(stations);

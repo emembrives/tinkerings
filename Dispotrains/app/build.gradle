@@ -9,10 +9,6 @@ android {
         applicationId "fr.membrives.dispotrains"
         minSdkVersion 16
         targetSdkVersion 23
-        compileOptions {
-            sourceCompatibility JavaVersion.VERSION_1_5
-            targetCompatibility JavaVersion.VERSION_1_5
-        }
     }
 
     packagingOptions {

@@ -15,6 +15,7 @@ import java.util.List;
 import fr.membrives.dispotrains.adapters.StationAdapter;
 import fr.membrives.dispotrains.data.Line;
 import fr.membrives.dispotrains.data.Station;
+import fr.membrives.dispotrains.sync.DataSource;
 
 public class StationListActivity extends ListeningActivity {
     private DataSource mDataSource;

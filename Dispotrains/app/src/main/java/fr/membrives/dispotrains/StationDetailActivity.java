@@ -17,6 +17,7 @@ import com.google.android.gms.analytics.Tracker;
 import fr.membrives.dispotrains.adapters.ElevatorAdapter;
 import fr.membrives.dispotrains.data.Elevator;
 import fr.membrives.dispotrains.data.Station;
+import fr.membrives.dispotrains.sync.DataSource;
 
 public class StationDetailActivity extends ListActivity {
     private DataSource mDataSource;

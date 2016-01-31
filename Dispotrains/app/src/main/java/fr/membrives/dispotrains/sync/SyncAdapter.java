@@ -1,4 +1,4 @@
-package fr.membrives.dispotrains;
+package fr.membrives.dispotrains.sync;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +20,6 @@ import org.json.JSONObject;
 import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SyncResult;
 import android.os.Bundle;

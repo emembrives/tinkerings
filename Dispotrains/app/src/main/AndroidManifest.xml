@@ -43,7 +43,7 @@
                 android:value="fr.membrives.dispotrains.StationListActivity"/>
         </activity>
 
-        <service android:name="fr.membrives.dispotrains.AuthenticatorService">
+        <service android:name=".sync.AuthenticatorService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator"/>
             </intent-filter>
@@ -54,12 +54,12 @@
         </service>
 
         <provider
-            android:name=".ElevatorContentProvider"
+            android:name=".sync.ElevatorContentProvider"
             android:authorities="fr.membrives.dispotrains"
             android:exported="false"
             android:syncable="true"/>
 
-        <service android:name=".SyncService">
+        <service android:name=".sync.SyncService">
             <intent-filter>
                 <action android:name="android.content.SyncAdapter"/>
             </intent-filter>

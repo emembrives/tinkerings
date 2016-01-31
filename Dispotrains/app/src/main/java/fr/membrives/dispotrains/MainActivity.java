@@ -17,6 +17,7 @@ import java.util.List;
 
 import fr.membrives.dispotrains.adapters.LineAdapter;
 import fr.membrives.dispotrains.data.Line;
+import fr.membrives.dispotrains.sync.DataSource;
 
 public class MainActivity extends ListeningActivity {
 

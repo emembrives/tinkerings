@@ -1,4 +1,4 @@
-package fr.membrives.dispotrains;
+package fr.membrives.dispotrains.sync;
 
 import android.app.Service;
 import android.content.Intent;

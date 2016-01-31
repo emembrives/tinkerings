@@ -50,6 +50,9 @@ abstract public class ListeningActivity extends ListActivity
          * Add the account and account type, no password or user data If successful, return the
          * Account object, otherwise report an error.
          */
+        ContentResolver.setSyncAutomatically(newAccount, AUTHORITY, true);
+        ContentResolver.setIsSyncable(newAccount, AUTHORITY, 1);
+        ContentResolver.addPeriodicSync(newAccount, AUTHORITY, new Bundle(), 1800);
         if (accountManager.addAccountExplicitly(newAccount, null, null)) {
             Log.d(TAG, "Account added.");
         } else {
@@ -107,8 +110,6 @@ abstract public class ListeningActivity extends ListActivity
     }
 
     protected void doRefresh() {
-        ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, true);
-        ContentResolver.addPeriodicSync(mAccount, AUTHORITY, new Bundle(), 1800);
         Bundle settingsBundle = new Bundle();
         settingsBundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
         settingsBundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);

@@ -1,25 +1,41 @@
 package fr.membrives.dispotrains.data;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
- * Created by etienne on 04/10/14.
+ * A train station
  */
 public class Station implements Comparable<Station>, Parcelable {
+    public static final Parcelable.Creator<Station> CREATOR = new Parcelable.Creator<Station>() {
+        public Station createFromParcel(Parcel source) {
+            String name = source.readString();
+            String display = source.readString();
+            // boolean[]{working, watched}
+            boolean[] booleanArray = new boolean[2];
+            source.readBooleanArray(booleanArray);
+            return new Station(name, display, booleanArray[0], booleanArray[1]);
+        }
+
+        public Station[] newArray(int size) {
+            return new Station[size];
+        }
+    };
     private final String name;
     private final String display;
     private final boolean working;
     private final Set<Line> lines;
     private final Set<Elevator> elevators;
+    private boolean watched;
 
-    public Station(String name, String display, boolean working) {
+    public Station(String name, String display, boolean working, boolean watched) {
         this.name = name;
         this.display = display;
         this.working = working;
+        this.watched = watched;
         this.lines = new HashSet<Line>();
         this.elevators = new HashSet<Elevator>();
     }
@@ -50,6 +66,14 @@ public class Station implements Comparable<Station>, Parcelable {
         return elevators;
     }
 
+    public boolean isWatched() {
+        return watched;
+    }
+
+    public void setWatched(boolean watched) {
+        this.watched = watched;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -62,25 +86,33 @@ public class Station implements Comparable<Station>, Parcelable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         Station other = (Station) obj;
         if (display == null) {
-            if (other.display != null)
+            if (other.display != null) {
                 return false;
-        } else if (!display.equals(other.display))
+            }
+        } else if (!display.equals(other.display)) {
             return false;
+        }
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        } else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
-        if (working != other.working)
+        }
+        if (working != other.working) {
             return false;
+        }
         return true;
     }
 
@@ -103,20 +135,6 @@ public class Station implements Comparable<Station>, Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(name);
         dest.writeString(display);
-        dest.writeBooleanArray(new boolean[] { working });
+        dest.writeBooleanArray(new boolean[]{working, watched});
     }
-
-    public static final Parcelable.Creator<Station> CREATOR = new Parcelable.Creator<Station>() {
-        public Station createFromParcel(Parcel source) {
-            String name = source.readString();
-            String display = source.readString();
-            boolean[] workingArray = new boolean[1];
-            source.readBooleanArray(workingArray);
-            return new Station(name, display, workingArray[0]);
-        }
-
-        public Station[] newArray(int size) {
-            return new Station[size];
-        }
-    };
 }

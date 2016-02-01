@@ -28,22 +28,26 @@ public class StationListActivity extends ListeningActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.station_list_activity);
         ((SwipeRefreshLayout) findViewById(R.id.swipe_refresh)).setOnRefreshListener(this);
-        mDataSource = new DataSource(this);
 
         getActionBar().setDisplayHomeAsUpEnabled(true);
         mLine = (Line) getIntent().getExtras().getParcelable("line");
         getActionBar().setTitle(mLine.getNetwork() + " " + mLine.getId());
 
-        mStations = new ArrayList<Station>(mDataSource.getStationsPerLine(mLine));
-        Collections.sort(mStations);
+        mDataSource = new DataSource(this);
+        mStations = new ArrayList<Station>();
         mAdapter = new StationAdapter(this, mStations);
         setListAdapter(mAdapter);
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        mStations.clear();
+        mStations.addAll(mDataSource.getStationsPerLine(mLine));
+        Collections.sort(mStations);
+        mAdapter.notifyDataSetChanged();
+
         mTracker.setScreenName("StationList~" + mLine.getNetwork() + "/" + mLine.getId());
         mTracker.send(new HitBuilders.ScreenViewBuilder().build());
     }
@@ -69,7 +73,7 @@ public class StationListActivity extends ListeningActivity {
         Station item = (Station) getListAdapter().getItem(position);
         Intent appInfo = new Intent(StationListActivity.this, StationDetailActivity.class);
         appInfo.putExtra("line", mLine);
-        appInfo.putExtra("station", item);
+        appInfo.putExtra("station", item.getName());
         startActivity(appInfo);
     }
 }

@@ -15,4 +15,6 @@
     </string>
     <string name="action_about">A propos</string>
     <string name="action_refresh">Actualiser</string>
+    <string name="action_watch_off">Suivre cette gare</string>
+    <string name="action_watch_on">Arrêter de suivre cette gare</string>
 </resources>

@@ -14,7 +14,7 @@ public class Elevator implements Comparable<Elevator> {
     private Station station;
 
     public Elevator(String id, String situation, String direction, String statusDescription,
-            Date statusDate) {
+                    Date statusDate) {
         this.id = id;
         this.situation = situation;
         this.direction = direction;
@@ -50,6 +50,10 @@ public class Elevator implements Comparable<Elevator> {
         this.station = station;
     }
 
+    public boolean isWorking() {
+        return this.getStatusDescription().equalsIgnoreCase("Disponible");
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -62,28 +66,37 @@ public class Elevator implements Comparable<Elevator> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         Elevator other = (Elevator) obj;
         if (direction == null) {
-            if (other.direction != null)
+            if (other.direction != null) {
                 return false;
-        } else if (!direction.equals(other.direction))
+            }
+        } else if (!direction.equals(other.direction)) {
             return false;
+        }
         if (id == null) {
-            if (other.id != null)
+            if (other.id != null) {
                 return false;
-        } else if (!id.equals(other.id))
+            }
+        } else if (!id.equals(other.id)) {
             return false;
+        }
         if (situation == null) {
-            if (other.situation != null)
+            if (other.situation != null) {
                 return false;
-        } else if (!situation.equals(other.situation))
+            }
+        } else if (!situation.equals(other.situation)) {
             return false;
+        }
         return true;
     }
 

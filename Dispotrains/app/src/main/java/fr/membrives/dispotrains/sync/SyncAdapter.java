@@ -1,22 +1,5 @@
 package fr.membrives.dispotrains.sync;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.io.IOUtils;
-import org.joda.time.format.ISODateTimeFormat;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.accounts.Account;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
@@ -28,6 +11,23 @@ import android.util.Log;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import org.apache.commons.io.IOUtils;
+import org.joda.time.format.ISODateTimeFormat;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import fr.membrives.dispotrains.data.Elevator;
 import fr.membrives.dispotrains.data.Line;
 import fr.membrives.dispotrains.data.Station;
@@ -37,6 +37,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     // Global variables
     // Define a variable to contain a content resolver instance
     private final DataSource mSource;
+    private final StationNotificationManager mNotificationManager;
 
     /**
      * Set up the sync adapter
@@ -47,6 +48,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          * If your app uses a content resolver, get an instance of it from the incoming Context
          */
         mSource = new DataSource(context);
+        mNotificationManager = new StationNotificationManager(context);
     }
 
     /**
@@ -59,11 +61,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          * If your app uses a content resolver, get an instance of it from the incoming Context
          */
         mSource = new DataSource(context);
+        mNotificationManager = new StationNotificationManager(context);
     }
 
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority,
-            ContentProviderClient provider, SyncResult syncResult) {
+                              ContentProviderClient provider, SyncResult syncResult) {
         Multimap<Line, Station> lines = HashMultimap.create();
         try {
             URL stationsURL = new URL("http://dispotrains.membrives.fr/app/GetStations/");
@@ -116,10 +119,16 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     syncResult.stats.numEntries++;
                 } else {
                     Station oldStation = oldStations.get(station);
+                    station.setWatched(oldStation.isWatched());
                     if (station.getWorking() != oldStation.getWorking()) {
                         mSource.addStationToDatabase(station);
+                        if (station.isWatched()) {
+                            mNotificationManager.changedWorkingState(station);
+                        }
                         syncResult.stats.numUpdates++;
                         syncResult.stats.numEntries++;
+                    } else if (station.isWatched() && !station.getWorking()) {
+                        mNotificationManager.notWorking(station);
                     }
                     for (Elevator oldElevator : mSource.getElevatorsPerStation(station)) {
                         oldElevators.put(oldElevator, oldElevator);
@@ -133,8 +142,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         syncResult.stats.numInserts++;
                         syncResult.stats.numEntries++;
                     } else {
-                        if (!elevator.getStatusDate().equals(
-                                oldElevators.get(elevator).getStatusDate())) {
+                        if (!elevator.getStatusDate()
+                                .equals(oldElevators.get(elevator).getStatusDate())) {
                             // Elevator status has been updated
                             mSource.addElevatorToDatabase(elevator);
                             syncResult.stats.numUpdates++;
@@ -163,9 +172,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         Log.d(TAG, new StringBuilder("lines, stations, elevators: ").append(nbLines).append(" ")
                 .append(nbStations).append(" ").append(nbElevators).toString());
         Log.d(TAG, new StringBuilder("SyncStats: ").append(syncResult.stats.numEntries).append(" ")
-                .append(syncResult.stats.numInserts).append(" ")
-                .append(syncResult.stats.numUpdates).append(" ")
-                .append(syncResult.stats.numDeletes).toString());
+                .append(syncResult.stats.numInserts).append(" ").append(syncResult.stats.numUpdates)
+                .append(" ").append(syncResult.stats.numDeletes).toString());
     }
 
     private Multimap<Line, Station> processStation(JSONObject jsonStation) throws JSONException {
@@ -180,15 +188,16 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             JSONObject jsonStatus = jsonElevator.getJSONObject("status");
             Date lastUpdate = ISODateTimeFormat.dateTimeParser()
                     .parseDateTime(jsonStatus.getString("lastupdate")).toDate();
-            Elevator elevator = new Elevator(jsonElevator.getString("id"),
-                    jsonElevator.getString("situation"), jsonElevator.getString("direction"),
-                    jsonStatus.getString("state"), lastUpdate);
+            Elevator elevator =
+                    new Elevator(jsonElevator.getString("id"), jsonElevator.getString("situation"),
+                            jsonElevator.getString("direction"), jsonStatus.getString("state"),
+                            lastUpdate);
             elevators.add(elevator);
-            if (stationWorking && !elevator.getStatusDescription().equalsIgnoreCase("Disponible")) {
+            if (stationWorking && !elevator.isWorking()) {
                 stationWorking = false;
             }
         }
-        Station station = new Station(name, displayName, stationWorking);
+        Station station = new Station(name, displayName, stationWorking, false);
         for (Elevator elevator : elevators) {
             station.addElevator(elevator);
         }

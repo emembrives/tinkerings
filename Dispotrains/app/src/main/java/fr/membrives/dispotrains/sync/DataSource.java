@@ -31,7 +31,8 @@ public class DataSource {
         String name = cursor.getString(0);
         String display = cursor.getString(1);
         boolean working = cursor.getInt(2) != 0;
-        return new Station(name, display, working);
+        boolean watched = cursor.getInt(3) != 0;
+        return new Station(name, display, working, watched);
     }
 
     private Elevator cursorToElevator(Cursor cursor) {
@@ -87,6 +88,14 @@ public class DataSource {
         // make sure to close the cursor
         cursor.close();
         return elevators;
+    }
+
+    public Station getStation(String stationName) {
+        Cursor stationCursor = mHelper.getStation(stationName);
+        stationCursor.moveToFirst();
+        Station station = cursorToStation(stationCursor);
+        stationCursor.close();
+        return station;
     }
 
     public boolean addLineToDatabase(Line line) {

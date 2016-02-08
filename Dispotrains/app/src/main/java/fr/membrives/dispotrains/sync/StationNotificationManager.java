@@ -34,14 +34,18 @@ public class StationNotificationManager {
      * Renders a notification for a watched station whose working state changed.
      */
     public void changedWorkingState(Station station) {
-        emitNotification(station, Notification.PRIORITY_LOW, false);
+        emitNotification(station, Notification.PRIORITY_DEFAULT, false);
     }
 
     /**
      * Renders a notification for a watched stations whose working state has not changed.
      */
     public void watchedStation(Station station) {
-        emitNotification(station, Notification.PRIORITY_MIN, true);
+        if (station.getWorking()) {
+            emitNotification(station, Notification.PRIORITY_MIN, false);
+        } else {
+            emitNotification(station, Notification.PRIORITY_LOW, true);
+        }
     }
 
     private void emitNotification(Station station, int priority, boolean ongoing) {

@@ -3,6 +3,7 @@ package fr.membrives.dispotrains.data;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -72,6 +73,19 @@ public class Station implements Comparable<Station>, Parcelable {
 
     public void setWatched(boolean watched) {
         this.watched = watched;
+    }
+
+    public Date getLastUpdate() {
+        if (elevators.isEmpty()) {
+            return new Date();
+        }
+        Date time = null;
+        for (Elevator elevator : elevators) {
+            if (time == null || elevator.getStatusDate().after(time)) {
+                time = elevator.getStatusDate();
+            }
+        }
+        return time;
     }
 
     @Override

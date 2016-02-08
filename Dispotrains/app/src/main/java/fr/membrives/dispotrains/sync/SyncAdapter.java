@@ -127,8 +127,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         }
                         syncResult.stats.numUpdates++;
                         syncResult.stats.numEntries++;
-                    } else if (station.isWatched() && !station.getWorking()) {
-                        mNotificationManager.notWorking(station);
+                    } else if (station.isWatched()) {
+                        mNotificationManager.watchedStation(station);
                     }
                     for (Elevator oldElevator : mSource.getElevatorsPerStation(station)) {
                         oldElevators.put(oldElevator, oldElevator);

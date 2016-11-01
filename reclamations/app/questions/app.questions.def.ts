@@ -8,16 +8,25 @@ export class State {
   values: Value[];
 }
 
-export interface Question {
-  template: string;
-  priority: number;
+const QUESTIONS : string = `
+  [
+    {
+      id: 1,
+      introduction: "Sur quel réseau vous trouviez-vous ?",
+      type: "choices",
+      choices: [
+        "SNCF Transilien",
+        "RER RATP",
+        "Métro",
+        "Bus RATP",
+        "Tramway",
+      ]
+    }
+  ]`;
+export class Question {
+  constructor(readonly introduction: string, readonly type: string, readonly choices: string[]);
 
-  isSet(): boolean;
-  getValues() : Value[];
-  isActive(s: State) : boolean;
-}
-
-export class Engine {
-  configuration: Question[];
-  state: State;
+  isActive(s: State) : boolean {
+    return true;
+  }
 }

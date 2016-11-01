@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { createEngine } from './questions/app.questions'
+import { QuestionEngineService } from './questions/question-engine.service'
 
 @Component({
   selector: 'my-app',
-  template: '<h1>{{title}}</h1><h2>{{hero}} details!</h2>'
+  template: '<h1>{{title}}</h1><h2>{{hero}} details!</h2>',
+  providers: [QuestionEngineService]
 })
-
 export class AppComponent {
   title = 'Générateur de réclamation';
   hero = 'Windstorm';
-  config = createEngine();
+  constructor(private engine: QuestionEngineService) { }
 }

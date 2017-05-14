@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/ishiikurisu/edf"
+	"github.com/emembrives/edf"
 )
 
 var (
@@ -13,6 +13,8 @@ var (
 
 func main() {
 	flag.Parse()
-	edfContents := edf.ReadFile(*inputFile)
-	fmt.Println(edfContents.WriteCSV())
+	edfContents, _ := edf.ReadEDF(*inputFile)
+	fmt.Printf("%+v\n", edfContents.Header)
+	signal, _ := edfContents.GetSignals()[0]
+	aS := signal.(AnnotationSignal)
 }

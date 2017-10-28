@@ -121,6 +121,31 @@ func makeOneRequest() result {
 	return result
 }
 
+func oneLoop() {
+	file, err := os.Create(fmt.Sprintf("accesslog-%s.log.gz", time.Now()))
+	if err != nil {
+		log.Fatalf("Unable to open file: %s", err)
+	}
+	defer file.Close()
+	compressed, err := gzip.NewWriterLevel(file, gzip.BestCompression)
+	if err != nil {
+		log.Fatalf("Unable to compress file: %s", err)
+	}
+	defer compressed.Close()
+	csvWriter := csv.NewWriter(compressed)
+	defer csvWriter.Flush()
+	// New file every 24h.
+	for i := 0; i < 3600*12; i++ {
+		result := makeOneRequest()
+		csvWriter.Write(result.ToCSV())
+		csvWriter.Flush()
+		if i%100 == 0 {
+			compressed.Flush()
+		}
+		time.Sleep(2 * time.Second)
+	}
+}
+
 func main() {
 	flag.Parse()
 	rand.Seed(time.Now().UnixNano())
@@ -135,27 +160,7 @@ func main() {
 		return
 	}
 
-	file, err := os.Create(fmt.Sprintf("accesslog-%s.log.gz", time.Now()))
-	if err != nil {
-		log.Fatalf("Unable to open file: %s", err)
-	}
-	defer file.Close()
-	compressed, err := gzip.NewWriterLevel(file, gzip.BestCompression)
-	if err != nil {
-		log.Fatalf("Unable to compress file: %s", err)
-	}
-	defer compressed.Close()
-	csvWriter := csv.NewWriter(compressed)
-	iter := 0
 	for {
-		iter++
-		result := makeOneRequest()
-		csvWriter.Write(result.ToCSV())
-		csvWriter.Flush()
-		if iter%100 == 0 {
-			compressed.Flush()
-			iter = 0
-		}
-		time.Sleep(2 * time.Second)
+		oneLoop()
 	}
 }
